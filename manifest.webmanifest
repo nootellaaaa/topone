@@ -1,0 +1,12 @@
+{
+  "name": "LEA 2027 · Ella's Study Tracker",
+  "short_name": "LEA 2027",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fff5f8",
+  "theme_color": "#e83d7a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
