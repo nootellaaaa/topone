@@ -822,51 +822,54 @@ let calYear, calMonth, selectedDate;
 let fbSaveTimer = null;
 
 // ─── FIREBASE SYNC ───────────────────────────────────────
-async function fbSave(){
-  try {
-    await fetch(FB_URL + '.json', {
+function fbSave(){
+  clearTimeout(fbSaveTimer);
+  fbSaveTimer = setTimeout(function(){
+    fetch(FB_URL + '.json', {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({logs: state.logs, mocks: state.mocks})
-    });
-  } catch(e){ console.warn('Firebase save failed, using localStorage backup'); }
+    }).catch(function(e){ console.warn('Firebase save failed'); });
+  }, 800);
   try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(e){}
 }
 
-async function fbLoad(){
-  showSyncStatus('☁️ Syncing your data...');
-  try {
-    const res = await fetch(FB_URL + '.json');
-    const data = await res.json();
-    if(data && data.logs && data.mocks){
-      state.logs = data.logs;
-      state.mocks = data.mocks;
-      showSyncStatus('✅ Synced!');
-      return true;
-    }
-  } catch(e){ console.warn('Firebase load failed, using localStorage backup'); }
-  // fallback to localStorage
+function fbLoad(callback){
+  showSyncStatus('☁️ Syncing...');
+  fetch(FB_URL + '.json')
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(data && data.logs && data.mocks){
+        state.logs = data.logs;
+        state.mocks = data.mocks;
+        showSyncStatus('✅ Synced!');
+        if(callback) callback();
+      } else {
+        loadLocalStorage();
+        showSyncStatus('📱 Ready!');
+      }
+    })
+    .catch(function(){
+      loadLocalStorage();
+      showSyncStatus('📱 Ready!');
+    });
+}
+
+function loadLocalStorage(){
   try {
     const d = localStorage.getItem('lea2027_site');
     if(d){ const p = JSON.parse(d); state.logs = p.logs||[]; state.mocks = p.mocks||[]; }
   } catch(e){}
-  showSyncStatus('📱 Local data loaded');
-  return false;
 }
 
-function save(){
-  // debounce — save 800ms after last change
-  clearTimeout(fbSaveTimer);
-  fbSaveTimer = setTimeout(fbSave, 800);
-  try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(e){}
-}
+function save(){ fbSave(); }
 
 function showSyncStatus(msg){
-  let el = document.getElementById('sync-status');
+  const el = document.getElementById('sync-status');
   if(!el) return;
   el.textContent = msg;
   el.style.opacity = '1';
-  setTimeout(()=>{ el.style.opacity = '0'; }, 3000);
+  setTimeout(function(){ el.style.opacity = '0'; }, 3000);
 }
 
 // ─── INIT ────────────────────────────────────────────────
@@ -878,7 +881,7 @@ function init(){
   document.getElementById('log-date').value = selectedDate;
   document.getElementById('mock-date').value = selectedDate;
 
-  // run everything synchronously first
+  // render everything immediately
   setDailyQuote();
   updateCountdown();
   renderCalendar();
@@ -888,14 +891,12 @@ function init(){
   renderProgress();
   updateStats();
 
-  // then load Firebase in background without blocking
-  fbLoad().then(loaded => {
-    if(loaded){
-      renderLogList();
-      renderMockList();
-      renderProgress();
-      updateStats();
-    }
+  // then sync Firebase in background
+  fbLoad(function(){
+    renderLogList();
+    renderMockList();
+    renderProgress();
+    updateStats();
   });
 }
 
@@ -1314,7 +1315,7 @@ function importData(e){
       if(!confirm(`Import ${data.logs.length} study log(s) and ${data.mocks.length} mock test(s)?\n\nThis will REPLACE your current data.`)) return;
       state.logs = data.logs;
       state.mocks = data.mocks;
-      await fbSave();
+      fbSave();
       renderLogList();
       renderMockList();
       renderProgress();
