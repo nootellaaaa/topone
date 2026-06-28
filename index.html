@@ -841,9 +841,9 @@ function fbLoad(callback){
   fetch(FB_URL + '.json')
     .then(function(res){ return res.json(); })
     .then(function(data){
-      if(data && data.logs && data.mocks){
-        state.logs = data.logs;
-        state.mocks = data.mocks;
+      if(data && (data.logs || data.mocks)){
+        state.logs = data.logs || [];
+        state.mocks = data.mocks || [];
         showSyncStatus('✅ Synced!');
         if(callback) callback();
       } else {
