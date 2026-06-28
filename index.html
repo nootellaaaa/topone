@@ -870,7 +870,7 @@ function showSyncStatus(msg){
 }
 
 // ─── INIT ────────────────────────────────────────────────
-async function init(){
+function init(){
   const now = new Date();
   calYear = now.getFullYear();
   calMonth = now.getMonth();
@@ -878,7 +878,7 @@ async function init(){
   document.getElementById('log-date').value = selectedDate;
   document.getElementById('mock-date').value = selectedDate;
 
-  // render immediately — don't wait for Firebase
+  // run everything synchronously first
   setDailyQuote();
   updateCountdown();
   renderCalendar();
@@ -888,14 +888,15 @@ async function init(){
   renderProgress();
   updateStats();
 
-  // load from Firebase in background, then refresh UI
-  const loaded = await fbLoad();
-  if(loaded){
-    renderLogList();
-    renderMockList();
-    renderProgress();
-    updateStats();
-  }
+  // then load Firebase in background without blocking
+  fbLoad().then(loaded => {
+    if(loaded){
+      renderLogList();
+      renderMockList();
+      renderProgress();
+      updateStats();
+    }
+  });
 }
 
 function toDateStr(d){return d.toISOString().split('T')[0];}
