@@ -956,51 +956,102 @@ const EXAM_DATE = new Date('2027-01-14T08:00:00');
 const FB_URL = 'https://toponelea2027-default-rtdb.asia-southeast1.firebasedatabase.app/ella';
 
 // ─── STATE ──────────────────────────────────────────────
-let state = {logs:[], mocks:[], books:{}};
+let state = {logs:[], mocks:[], books:{}, updatedAt:0};
 let calYear, calMonth, selectedDate;
 let fbSaveTimer = null;
 
 // ─── FIREBASE SYNC ───────────────────────────────────────
+function flushSave(useBeacon){
+  clearTimeout(fbSaveTimer);
+  state.updatedAt = Date.now();
+  const payload = JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, updatedAt: state.updatedAt});
+  try { localStorage.setItem('lea2027_site', payload); } catch(e){}
+  if(useBeacon && navigator.sendBeacon){
+    try {
+      navigator.sendBeacon(FB_URL + '.json', new Blob([payload], {type:'application/json'}));
+      return;
+    } catch(e){ /* fall through to fetch */ }
+  }
+  fetch(FB_URL + '.json', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: payload,
+    keepalive: true
+  }).catch(function(e){ console.warn('Firebase save failed'); });
+}
+
 function fbSave(){
   clearTimeout(fbSaveTimer);
-  fbSaveTimer = setTimeout(function(){
-    fetch(FB_URL + '.json', {
-      method: 'PUT',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books})
-    }).catch(function(e){ console.warn('Firebase save failed'); });
-  }, 800);
-  try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(e){}
+  fbSaveTimer = setTimeout(function(){ flushSave(false); }, 400);
+  try {
+    state.updatedAt = Date.now();
+    localStorage.setItem('lea2027_site', JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, updatedAt: state.updatedAt}));
+  } catch(e){}
 }
+
+window.addEventListener('beforeunload', function(){
+  if(fbSaveTimer){ flushSave(true); }
+});
+window.addEventListener('pagehide', function(){
+  if(fbSaveTimer){ flushSave(true); }
+});
 
 function fbLoad(callback){
   showSyncStatus('☁️ Syncing...');
+  const local = readLocalStorage();
   fetch(FB_URL + '.json')
     .then(function(res){ return res.json(); })
     .then(function(data){
-      if(data && data.logs && data.mocks){
-        state.logs = data.logs;
-        state.mocks = data.mocks;
-        state.books = data.books || defaultBooks();
+      const remote = (data && data.logs && data.mocks) ? data : null;
+      const remoteTime = (remote && remote.updatedAt) || 0;
+      const localTime = (local && local.updatedAt) || 0;
+
+      if(remote && remoteTime >= localTime){
+        state.logs = remote.logs;
+        state.mocks = remote.mocks;
+        state.books = remote.books || defaultBooks();
+        state.updatedAt = remoteTime;
+        try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(e){}
         showSyncStatus('✅ Synced!');
-        if(callback) callback();
+      } else if(local){
+        state.logs = local.logs || [];
+        state.mocks = local.mocks || [];
+        state.books = local.books || defaultBooks();
+        state.updatedAt = localTime;
+        // local is newer than what's on Firebase (e.g. a save never finished) — push it back up
+        flushSave(false);
+        showSyncStatus('📱 Restored newer local data');
       } else {
-        loadLocalStorage();
+        state.books = defaultBooks();
         showSyncStatus('📱 Ready!');
       }
+      if(callback) callback();
     })
     .catch(function(){
-      loadLocalStorage();
+      if(local){
+        state.logs = local.logs || [];
+        state.mocks = local.mocks || [];
+        state.books = local.books || defaultBooks();
+        state.updatedAt = localTime;
+      } else {
+        state.books = defaultBooks();
+      }
       showSyncStatus('📱 Ready!');
+      if(callback) callback();
     });
 }
 
-function loadLocalStorage(){
+function readLocalStorage(){
   try {
     const d = localStorage.getItem('lea2027_site');
-    if(d){ const p = JSON.parse(d); state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); }
-    else { state.books = defaultBooks(); }
-  } catch(e){ state.books = defaultBooks(); }
+    return d ? JSON.parse(d) : null;
+  } catch(e){ return null; }
+}
+
+function loadLocalStorage(){
+  const p = readLocalStorage();
+  if(p){ state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); state.updatedAt = p.updatedAt||0; }
+  else { state.books = defaultBooks(); }
 }
 
 function defaultBooks(){
