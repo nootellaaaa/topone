@@ -8,11 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='pg' cx='40%25' cy='35%25' r='60%25'><stop offset='0%25' stop-color='%23ffb3d1'/><stop offset='100%25' stop-color='%23e83d7a'/></radialGradient></defs><circle cx='50' cy='50' r='50' fill='url(%23pg)'/><text x='50' y='68' font-family='Georgia,serif' font-size='62' font-weight='bold' text-anchor='middle' fill='%23ffffff'>1</text></svg>" />
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-<link rel="manifest" href="manifest.webmanifest" />
-<meta name="theme-color" content="#e83d7a" />
-<meta name="apple-mobile-web-app-title" content="LEA 2027" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='pg' cx='40%25' cy='35%25' r='60%25'><stop offset='0%25' stop-color='%23ffb3d1'/><stop offset='100%25' stop-color='%23e83d7a'/></radialGradient></defs><circle cx='50' cy='50' r='50' fill='url(%23pg)'/><text x='50' y='68' font-family='Georgia,serif' font-size='62' font-weight='bold' text-anchor='middle' fill='%23ffffff'>1</text></svg>" />
 <style>
 :root {
   --pink-50: #fff0f5;
@@ -406,6 +402,72 @@ header {
   font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: 99px;
 }
 
+/* ─── READING TRACKER ─── */
+.rd-book-card {
+  background: var(--warm-white); border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 1rem 1.1rem; margin-bottom: 8px;
+}
+.rd-book-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.rd-book-title { font-weight: 600; font-size: 13px; color: var(--text-dark); }
+.rd-book-meta { font-size: 11px; color: var(--text-soft); margin-top: 1px; }
+.rd-remaining-text { font-size: 11px; color: var(--text-soft); margin-top: 5px; }
+.rd-log-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1.5px solid var(--border); flex-wrap: wrap; }
+.rd-log-row input[type="date"] { padding: 7px 9px; border: 1.5px solid var(--pink-100); border-radius: 10px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark); }
+.rd-log-row input[type="number"] { width: 90px; padding: 7px 9px; border: 1.5px solid var(--pink-100); border-radius: 10px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark); }
+.rd-log-row input:focus { outline: none; border-color: var(--pink-300); }
+.rd-log-btn { background: var(--pink-500); color: #fff; border: none; border-radius: 10px; padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; }
+.rd-log-btn:hover { background: var(--pink-600); }
+.rd-history { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+.rd-history-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-soft); }
+.rd-history-row .rd-hist-del { cursor: pointer; }
+.rd-history-row .rd-hist-del:hover { color: var(--pink-500); }
+.btn-del.confirm { background: #ffe1e1; color: #b91c1c; border-radius: 8px; padding: 3px 9px; font-weight: 600; font-size: 11px; }
+.rd-pace-tag { font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 99px; margin-left: 8px; }
+.rd-pace-tag.ahead { background: var(--matcha-100); color: var(--matcha-600); }
+.rd-pace-tag.ontrack { background: var(--pink-100); color: var(--pink-600); }
+.rd-pace-tag.behind { background: #fff1f1; color: #b91c1c; }
+.rd-finish-text { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+.rd-subject-tag { font-size: 10px; color: var(--matcha-600); background: var(--matcha-100); padding: 2px 8px; border-radius: 99px; display: inline-block; margin-top: 4px; }
+.rd-log-note { width: 100%; margin-top: 6px; padding: 7px 9px; border: 1.5px solid var(--pink-100); border-radius: 10px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark); }
+.rd-log-note:focus { outline: none; border-color: var(--pink-300); }
+.rd-reminder { font-size: 12px; color: var(--text-soft); font-style: italic; margin: -4px 0 1rem; }
+.cal-day-reading-dot { position: absolute; top: 5px; left: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--pink-400); }
+
+/* ─── DARK MODE ─── */
+body.dark-mode {
+  --cream: #221a1e;
+  --warm-white: #2b2126;
+  --pink-50: #3a2530;
+  --pink-100: #4a2f3a;
+  --matcha-50: #1f2b1a;
+  --matcha-100: #2c3d24;
+  --text-dark: #f5eef2;
+  --text-mid: #d9c3d0;
+  --text-soft: #b39aa8;
+  --border: rgba(255,182,215,0.14);
+}
+body.dark-mode .bg-blob { opacity: 0.18; }
+
+/* ─── MILESTONE GLOW ─── */
+.countdown-card.milestone {
+  border-color: #f5d060;
+  box-shadow: 0 8px 40px rgba(245,208,96,0.35), 0 2px 8px rgba(110,163,76,0.07);
+}
+
+/* ─── CONFETTI ─── */
+.confetti-particle {
+  position: fixed; top: -20px; font-size: 20px; z-index: 9998;
+  pointer-events: none; animation: confetti-fall linear forwards;
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+
+/* ─── MILESTONE BADGES ─── */
+.rd-badges { margin-top: 6px; font-size: 13px; letter-spacing: 2px; }
+.rd-catchup { font-size: 11px; color: #b91c1c; margin-top: 2px; }
+
 /* ─── EMPTY STATES ─── */
 .empty-state { text-align: center; padding: 2rem 1rem; color: var(--text-soft); }
 .empty-icon { font-size: 2rem; margin-bottom: .5rem; }
@@ -478,6 +540,7 @@ footer {
         <div class="hero-badge pink">🏛️ LEA 2027</div>
       </div>
       <div class="hero-sub">This is already yours. Just keep showing up. 🌿</div>
+      <div class="hero-sub" id="hero-affirmation" style="margin-top:2px;"></div>
     </div>
     <div class="hero-petals">🌸</div>
   </div>
@@ -490,6 +553,7 @@ footer {
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span id="sync-status" style="font-size:11px;color:var(--matcha-500);opacity:0;transition:opacity .4s;font-family:'Caveat',cursive;font-size:13px;"></span>
       <button class="data-btn" onclick="exportData()" title="Save your logs & scores to a file">💾 Export</button>
+      <button class="data-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙 Dark</button>
       <label class="data-btn import-label" title="Restore logs & scores from a file">
         📂 Import
         <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="display:none;" />
@@ -503,7 +567,7 @@ footer {
     <!-- ── LEFT / MAIN ── -->
     <div class="main-col">
       <!-- Stats -->
-      <div class="stats-row">
+      <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
         <div class="stat-card">
           <div class="stat-val" id="s-days">—</div>
           <div class="stat-label">Days left</div>
@@ -516,6 +580,10 @@ footer {
           <div class="stat-val" id="s-best">—</div>
           <div class="stat-label">Best mock</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-val" id="s-reading-streak">0</div>
+          <div class="stat-label">Reading streak</div>
+        </div>
       </div>
 
       <!-- Tabs -->
@@ -524,6 +592,7 @@ footer {
         <button class="tab-btn" onclick="switchTab('studylog')">📖 Study log</button>
         <button class="tab-btn" onclick="switchTab('progress')">📊 Progress</button>
         <button class="tab-btn" onclick="switchTab('mocks')">📝 Mock tests</button>
+        <button class="tab-btn" onclick="switchTab('reading')">📚 Reading</button>
       </div>
 
       <!-- CALENDAR TAB -->
@@ -638,7 +707,58 @@ footer {
         </div>
 
         <button class="btn-add" onclick="addMock()">💾 Save mock test</button>
+        <div id="weak-cluster-flag"></div>
+        <div id="mock-trend-wrap"></div>
         <div style="margin-top:1rem;" id="mock-list"></div>
+      </div>
+
+      <!-- READING TAB -->
+      <div id="tab-reading" class="card" style="display:none;">
+        <div class="card-title">📚 Reading tracker</div>
+
+        <div class="stats-row" style="margin-bottom:.75rem; grid-template-columns:repeat(3,1fr);">
+          <div class="stat-card">
+            <div class="stat-val" id="rd-longest">0</div>
+            <div class="stat-label">Longest streak</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="rd-week">0</div>
+            <div class="stat-label">Pages this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="rd-month">0</div>
+            <div class="stat-label">Pages this month</div>
+          </div>
+        </div>
+        <div class="rd-reminder" id="rd-reminder"></div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Book title</label>
+            <input class="form-input" type="text" id="rd-title" placeholder="e.g. Ching Visual Dictionary" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Start date</label>
+            <input class="form-input" type="date" id="rd-start" />
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Total pages</label>
+            <input class="form-input" type="number" id="rd-pages" min="1" placeholder="300" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target pace (pages/day)</label>
+            <input class="form-input" type="number" id="rd-pace" min="1" placeholder="15" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject (optional)</label>
+          <input class="form-input" id="rd-subject" list="subj-list" placeholder="Type or pick a subject..." autocomplete="off" />
+        </div>
+        <button class="btn-add" onclick="addBook()">+ Add book</button>
+
+        <div style="margin-top:1rem;" id="rd-book-list"></div>
       </div>
     </div>
 
@@ -655,6 +775,19 @@ footer {
         </div>
         <div class="countdown-date">January 14, 2027 · LEA</div>
         <div class="countdown-handwriting" id="cd-message">You've got this! 🌿</div>
+      </div>
+
+      <!-- Combined streak -->
+      <div class="card" style="text-align:center;">
+        <div class="card-title" style="justify-content:center;"><span class="icon">🔥</span> Study streak</div>
+        <div style="font-family:'DM Serif Display',serif; font-size:1.8rem; color:var(--pink-500); line-height:1;" id="combined-streak-num">0</div>
+        <div style="font-size:10px; color:var(--text-soft); text-transform:uppercase; letter-spacing:.06em; margin-top:4px;">days showing up · study, reading, or a mock</div>
+      </div>
+
+      <!-- Weekly recap -->
+      <div class="quote-card">
+        <div class="quote-label"><span class="quote-leaf">🗓️</span> This week</div>
+        <div class="quote-text" style="font-family:'Caveat',cursive;font-style:normal;font-size:1.2rem;" id="weekly-recap-text">Loading...</div>
       </div>
 
       <!-- Daily Quote -->
@@ -823,7 +956,7 @@ const EXAM_DATE = new Date('2027-01-14T08:00:00');
 const FB_URL = 'https://toponelea2027-default-rtdb.asia-southeast1.firebasedatabase.app/ella';
 
 // ─── STATE ──────────────────────────────────────────────
-let state = {logs:[], mocks:[]};
+let state = {logs:[], mocks:[], books:{}};
 let calYear, calMonth, selectedDate;
 let fbSaveTimer = null;
 
@@ -834,7 +967,7 @@ function fbSave(){
     fetch(FB_URL + '.json', {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({logs: state.logs, mocks: state.mocks})
+      body: JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books})
     }).catch(function(e){ console.warn('Firebase save failed'); });
   }, 800);
   try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(e){}
@@ -845,9 +978,10 @@ function fbLoad(callback){
   fetch(FB_URL + '.json')
     .then(function(res){ return res.json(); })
     .then(function(data){
-      if(data && (data.logs || data.mocks)){
-        state.logs = data.logs || [];
-        state.mocks = data.mocks || [];
+      if(data && data.logs && data.mocks){
+        state.logs = data.logs;
+        state.mocks = data.mocks;
+        state.books = data.books || defaultBooks();
         showSyncStatus('✅ Synced!');
         if(callback) callback();
       } else {
@@ -864,8 +998,18 @@ function fbLoad(callback){
 function loadLocalStorage(){
   try {
     const d = localStorage.getItem('lea2027_site');
-    if(d){ const p = JSON.parse(d); state.logs = p.logs||[]; state.mocks = p.mocks||[]; }
-  } catch(e){}
+    if(d){ const p = JSON.parse(d); state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); }
+    else { state.books = defaultBooks(); }
+  } catch(e){ state.books = defaultBooks(); }
+}
+
+function defaultBooks(){
+  return {
+    "ching-visual-dictionary": {
+      title: "Ching — Visual Dictionary of Architecture",
+      totalPages: 300, pace: 15, start: "2026-07-12", progress: {}
+    }
+  };
 }
 
 function save(){ fbSave(); }
@@ -878,14 +1022,300 @@ function showSyncStatus(msg){
   setTimeout(function(){ el.style.opacity = '0'; }, 3000);
 }
 
+// ─── READING TRACKER ─────────────────────────────────────
+let addingBook = false;
+
+function entryPages(v){ return typeof v === 'number' ? v : (v && v.pages) || 0; }
+function entryHours(v){ return (v && typeof v === 'object' && v.hours) || 0; }
+function entryNote(v){ return (v && typeof v === 'object' && v.note) || ''; }
+
+function totalPagesRead(book){
+  return Object.values(book.progress).reduce((a,v)=>a+entryPages(v),0);
+}
+
+function allReadEntries(){
+  const entries = [];
+  Object.entries(state.books).forEach(([id, book])=>{
+    Object.entries(book.progress).forEach(([date, v])=>{
+      const pages = entryPages(v);
+      if(pages > 0) entries.push({ date, pages, hours: entryHours(v), subject: book.subject, bookId: id, bookTitle: book.title });
+    });
+  });
+  return entries;
+}
+
+function burstConfetti(){
+  const emojis = ['🌸','✨','🎉'];
+  for(let i=0;i<18;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-particle';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDuration = (1.5 + Math.random()*1.2) + 's';
+    el.style.animationDelay = (Math.random()*0.3) + 's';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 3200);
+  }
+}
+
+function readingStreaks(){
+  const dateSet = new Set(allReadEntries().map(e=>e.date));
+  if(dateSet.size === 0) return { current: 0, longest: 0 };
+  const dates = Array.from(dateSet).sort();
+  let longest = 1, run = 1;
+  for(let i=1;i<dates.length;i++){
+    const prev = new Date(dates[i-1] + 'T00:00:00');
+    const cur = new Date(dates[i] + 'T00:00:00');
+    const diff = Math.round((cur - prev) / 86400000);
+    run = diff === 1 ? run+1 : 1;
+    if(run > longest) longest = run;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  let cursor = new Date(today);
+  if(!dateSet.has(cursor.toISOString().slice(0,10))) cursor.setDate(cursor.getDate()-1);
+  let current = 0;
+  while(dateSet.has(cursor.toISOString().slice(0,10))){ current++; cursor.setDate(cursor.getDate()-1); }
+  return { current, longest };
+}
+
+function pagesSinceDaysAgo(days){
+  const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate()-days);
+  const cutoffISO = cutoff.toISOString().slice(0,10);
+  return allReadEntries().filter(e=>e.date > cutoffISO).reduce((a,e)=>a+e.pages,0);
+}
+
+function daysElapsed(book){
+  const start = new Date(book.start + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.max(1, Math.round((today - start)/86400000) + 1);
+}
+
+function paceStatus(book){
+  const elapsed = daysElapsed(book);
+  const expected = Math.min(elapsed * book.pace, book.totalPages);
+  const actual = totalPagesRead(book);
+  const diff = actual - expected;
+  if(actual >= book.totalPages) return { label:'Finished! 🎉', cls:'ahead', catchUp: 0 };
+  if(diff > book.pace/2) return { label:'Ahead', cls:'ahead', catchUp: 0 };
+  if(diff < -book.pace/2) return { label:'Behind', cls:'behind', catchUp: Math.ceil(-diff) };
+  return { label:'On track', cls:'ontrack', catchUp: 0 };
+}
+
+function milestoneBadges(pct){
+  let html = '';
+  for(let i=1;i<=4;i++){
+    const reached = pct >= i*25;
+    html += `<span style="opacity:${reached?1:0.25};">🌸</span>`;
+  }
+  return html;
+}
+
+function estFinishText(book){
+  const actual = totalPagesRead(book);
+  const remaining = book.totalPages - actual;
+  if(remaining <= 0) return 'Finished!';
+  const elapsed = daysElapsed(book);
+  const avgPace = actual > 0 ? actual / elapsed : book.pace;
+  const usablePace = avgPace > 0 ? avgPace : book.pace;
+  const daysNeeded = Math.ceil(remaining / usablePace);
+  const finish = new Date(); finish.setDate(finish.getDate() + daysNeeded);
+  return 'Est. finish ' + finish.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+}
+
+function addBook(){
+  if(addingBook) return;
+  addingBook = true;
+  try {
+    const title = document.getElementById('rd-title').value.trim();
+    const pages = parseInt(document.getElementById('rd-pages').value, 10);
+    const pace = parseInt(document.getElementById('rd-pace').value, 10);
+    const start = document.getElementById('rd-start').value || todayStr();
+    const subject = document.getElementById('rd-subject').value.trim();
+
+    if(!title || !pages || !pace){
+      alert('Add a title, total pages, and a target pace to continue.');
+      return;
+    }
+    const dup = Object.values(state.books).some(b => b.title.trim().toLowerCase() === title.toLowerCase());
+    if(dup){
+      alert('"' + title + '" is already on your shelf.');
+      return;
+    }
+
+    const id = title.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40) + '-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
+    state.books[id] = { title, totalPages: pages, pace, start, subject, progress: {} };
+    save();
+    document.getElementById('rd-title').value = '';
+    document.getElementById('rd-pages').value = '';
+    document.getElementById('rd-pace').value = '';
+    document.getElementById('rd-subject').value = '';
+    renderReading();
+    showToast('📖 "' + title + '" added to your shelf!');
+  } catch(err){
+    console.error('addBook failed:', err);
+    alert('Something went wrong adding the book — please try again, or refresh the page.');
+  } finally {
+    addingBook = false;
+  }
+}
+
+let pendingDeleteId = null;
+let pendingDeleteTimer = null;
+
+function deleteBook(id){
+  if(!state.books[id]) return;
+  if(pendingDeleteId === id){
+    clearTimeout(pendingDeleteTimer);
+    const title = state.books[id].title;
+    delete state.books[id];
+    pendingDeleteId = null;
+    save();
+    renderReading();
+    renderProgress();
+    renderCalendar();
+    showToast('🗑 "' + title + '" removed');
+  } else {
+    pendingDeleteId = id;
+    renderReading();
+    clearTimeout(pendingDeleteTimer);
+    pendingDeleteTimer = setTimeout(()=>{ pendingDeleteId = null; renderReading(); }, 3000);
+  }
+}
+
+function logBookPages(id){
+  const dateEl = document.getElementById('rd-log-date-' + id);
+  const pagesEl = document.getElementById('rd-log-pages-' + id);
+  const hoursEl = document.getElementById('rd-log-hours-' + id);
+  const noteEl = document.getElementById('rd-log-note-' + id);
+  const date = dateEl.value || todayStr();
+  const n = parseInt(pagesEl.value, 10);
+  if(!pagesEl.value || isNaN(n) || n <= 0){ alert('Enter how many pages you read.'); return; }
+  const hrs = parseFloat(hoursEl.value);
+  const note = noteEl.value.trim();
+
+  const book = state.books[id];
+  const prevRead = totalPagesRead(book);
+  const prevPct = Math.round((Math.min(prevRead, book.totalPages) / book.totalPages) * 100);
+  const prevStreaks = readingStreaks();
+
+  book.progress[date] = { pages: n, hours: isNaN(hrs) ? 0 : hrs, note };
+  save();
+  pagesEl.value = '';
+  hoursEl.value = '';
+  noteEl.value = '';
+  renderReading();
+  renderProgress();
+  renderCalendar();
+
+  const newRead = totalPagesRead(book);
+  const newPct = Math.round((Math.min(newRead, book.totalPages) / book.totalPages) * 100);
+  const newStreaks = readingStreaks();
+
+  if(prevRead < book.totalPages && newRead >= book.totalPages){
+    const q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+    burstConfetti();
+    showToast('🎉 Finished "' + book.title + '"! "' + q.text + '" — ' + q.ref, 6000);
+  } else if(newStreaks.current > prevStreaks.longest){
+    burstConfetti();
+    showToast('✨ New personal best! ' + newStreaks.current + '-day reading streak!', 5000);
+  } else {
+    [25,50,75].forEach(threshold=>{
+      if(prevPct < threshold && newPct >= threshold){
+        showToast('🌸 ' + threshold + '% done with "' + book.title + '"!', 4000);
+      }
+    });
+  }
+}
+
+function deleteBookEntry(id, date){
+  delete state.books[id].progress[date];
+  save();
+  renderReading();
+  renderProgress();
+  renderCalendar();
+}
+
+function renderReading(){
+  const { current, longest } = readingStreaks();
+  document.getElementById('s-reading-streak').textContent = current;
+  document.getElementById('rd-longest').textContent = longest;
+  document.getElementById('rd-week').textContent = pagesSinceDaysAgo(7);
+  document.getElementById('rd-month').textContent = pagesSinceDaysAgo(30);
+  renderCombinedStreak();
+  renderWeeklyRecap();
+  renderAffirmation();
+
+  const todayDates = new Set(allReadEntries().map(e=>e.date));
+  const hour = new Date().getHours();
+  const reminderEl = document.getElementById('rd-reminder');
+  if(hour >= 18 && !todayDates.has(todayStr()) && Object.keys(state.books).length){
+    reminderEl.textContent = "🌙 Haven't logged today yet — even a few pages keeps the streak going.";
+  } else {
+    reminderEl.textContent = '';
+  }
+
+  const el = document.getElementById('rd-book-list');
+  const ids = Object.keys(state.books);
+  if(!ids.length){
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📖</div><div class="empty-text">No books on the shelf yet — add one above!</div></div>`;
+    return;
+  }
+  el.innerHTML = ids.map(id=>{
+    const b = state.books[id];
+    const read = Math.min(totalPagesRead(b), b.totalPages);
+    const remaining = Math.max(b.totalPages - read, 0);
+    const pct = Math.round((read / b.totalPages) * 100);
+    const pace = paceStatus(b);
+    const finishText = estFinishText(b);
+    const history = Object.entries(b.progress).sort((a,z)=> z[0] < a[0] ? -1 : 1).slice(0,3);
+    const historyHtml = history.length ? `<div class="rd-history">` + history.map(([date,v])=>{
+      const d = new Date(date+'T12:00:00');
+      const fmt = d.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+      const pages = entryPages(v);
+      const hrs = entryHours(v);
+      const note = entryNote(v);
+      const extra = (hrs ? ' · ' + hrs + 'h' : '') + (note ? ' · "' + note + '"' : '');
+      return `<div class="rd-history-row"><span>${fmt} — ${pages} pages${extra}</span><span class="rd-hist-del" onclick="deleteBookEntry('${id}','${date}')">remove</span></div>`;
+    }).join('') + `</div>` : '';
+
+    return `<div class="rd-book-card">
+      <div class="rd-book-hdr">
+        <div>
+          <div class="rd-book-title">${b.title} <span class="rd-pace-tag ${pace.cls}">${pace.label}</span></div>
+          <div class="rd-book-meta">${b.totalPages} pages · target ${b.pace}/day</div>
+          ${b.subject ? `<div class="rd-subject-tag">${b.subject}</div>` : ''}
+        </div>
+        <button class="btn-del ${pendingDeleteId===id?'confirm':''}" onclick="deleteBook('${id}')">${pendingDeleteId===id?'Sure?':'🗑'}</button>
+      </div>
+      <div class="pb-track"><div class="pb-fill" style="width:${pct}%;background:linear-gradient(90deg,#f95f9688,var(--pink-500))"></div></div>
+      <div class="rd-remaining-text">${remaining} pages remaining · ${pct}% done</div>
+      <div class="rd-badges">${milestoneBadges(pct)}</div>
+      <div class="rd-finish-text">${finishText}</div>
+      ${pace.catchUp > 0 ? `<div class="rd-catchup">📍 a little behind — ${pace.catchUp} pages today gets you back on track</div>` : ''}
+      <div class="rd-log-row">
+        <input type="date" id="rd-log-date-${id}" value="${todayStr()}" />
+        <input type="number" id="rd-log-pages-${id}" min="1" placeholder="pages read" />
+        <input type="number" id="rd-log-hours-${id}" min="0" step="0.5" placeholder="hrs (optional)" style="width:100px" />
+        <button class="rd-log-btn" onclick="logBookPages('${id}')">Log</button>
+      </div>
+      <input type="text" class="rd-log-note" id="rd-log-note-${id}" placeholder="note (optional) — e.g. finished a chapter" />
+      ${historyHtml}
+    </div>`;
+  }).join('');
+}
+
 // ─── INIT ────────────────────────────────────────────────
 function init(){
+  const savedTheme = (function(){ try{ return localStorage.getItem('lea2027_theme'); }catch(e){ return null; } })() || 'light';
+  applyTheme(savedTheme);
+
   const now = new Date();
   calYear = now.getFullYear();
   calMonth = now.getMonth();
   selectedDate = toDateStr(now);
   document.getElementById('log-date').value = selectedDate;
   document.getElementById('mock-date').value = selectedDate;
+  document.getElementById('rd-start').value = selectedDate;
 
   // render everything immediately
   setDailyQuote();
@@ -896,6 +1326,7 @@ function init(){
   renderMockList();
   renderProgress();
   updateStats();
+  renderReading();
 
   // then sync Firebase in background
   fbLoad(function(){
@@ -903,6 +1334,7 @@ function init(){
     renderMockList();
     renderProgress();
     updateStats();
+    renderReading();
   });
 }
 
@@ -910,6 +1342,14 @@ function toDateStr(d){return d.toISOString().split('T')[0];}
 function todayStr(){return toDateStr(new Date());}
 
 // ─── COUNTDOWN ───────────────────────────────────────────
+const MILESTONE_MESSAGES = {
+  100: "🎉 100 days to go — halfway through the grind!",
+  50: "🎉 50 days left — the finish line is real now!",
+  30: "🎉 30 days — final month, Ella!",
+  7: "🎉 One week out — trust your prep!",
+  0: "🏛️ Exam day! You are so ready."
+};
+
 function updateCountdown(){
   const diff = EXAM_DATE - new Date();
   const days = Math.max(0, Math.floor(diff/86400000));
@@ -917,8 +1357,23 @@ function updateCountdown(){
   document.getElementById('cd-weeks').textContent = Math.floor(days/7);
   document.getElementById('cd-months').textContent = Math.floor(days/30);
   document.getElementById('s-days').textContent = days;
-  const msg = days > 200 ? "You've got this! 🌿" : days > 100 ? "Keep pushing, Ella! 💪" : days > 30 ? "Almost there! 🌸" : days > 0 ? "Final stretch! ✨" : "Exam day! 🏛️";
+  const msg = MILESTONE_MESSAGES[days] || (days > 200 ? "You've got this! 🌿" : days > 100 ? "Keep pushing, Ella! 💪" : days > 30 ? "Almost there! 🌸" : days > 0 ? "Final stretch! ✨" : "Exam day! 🏛️");
   document.getElementById('cd-message').textContent = msg;
+  const card = document.querySelector('.countdown-card');
+  if(card) card.classList.toggle('milestone', !!MILESTONE_MESSAGES[days]);
+}
+
+// ─── THEME ───────────────────────────────────────────────
+function applyTheme(theme){
+  document.body.classList.toggle('dark-mode', theme === 'dark');
+  const btn = document.getElementById('theme-toggle');
+  if(btn) btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+}
+
+function toggleTheme(){
+  const next = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+  applyTheme(next);
+  try{ localStorage.setItem('lea2027_theme', next); }catch(e){}
 }
 
 // ─── DAILY QUOTE ─────────────────────────────────────────
@@ -978,6 +1433,8 @@ function renderCalendar(){
   const label = MONTHS[calMonth] + ' ' + calYear;
   document.getElementById('cal-month-label').textContent = label;
 
+  const readingDates = new Set(allReadEntries().map(e=>e.date));
+
   const grid = document.getElementById('cal-grid');
   grid.innerHTML = DAYS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
 
@@ -1024,6 +1481,7 @@ function renderCalendar(){
     }
 
     grid.innerHTML += `<div class="${cls}" onclick="selectDate('${dateStr}')">
+      ${readingDates.has(dateStr) ? '<div class="cal-day-reading-dot" title="Reading logged"></div>' : ''}
       <div class="cal-day-num">${d}</div>
       ${eventsHtml}
     </div>`;
@@ -1176,6 +1634,12 @@ function renderProgress(){
     if(!bySubj[l.subj]) bySubj[l.subj]=0;
     bySubj[l.subj]+=l.hrs;
   });
+  allReadEntries().forEach(e=>{
+    if(e.subject && e.hours){
+      if(!bySubj[e.subject]) bySubj[e.subject]=0;
+      bySubj[e.subject]+=e.hours;
+    }
+  });
   const entries = Object.entries(bySubj).sort((a,b)=>b[1]-a[1]);
   const maxH = entries.length ? Math.max(...entries.map(e=>e[1]),1) : 1;
   const el = document.getElementById('progress-bars');
@@ -1274,30 +1738,166 @@ function renderMockList(){
 }
 
 // ─── STATS ───────────────────────────────────────────────
+function combinedStreak(){
+  const dateSet = new Set();
+  state.logs.forEach(l=>dateSet.add(l.date));
+  allReadEntries().forEach(e=>dateSet.add(e.date));
+  state.mocks.forEach(m=>dateSet.add(m.date));
+  if(dateSet.size === 0) return { current: 0, longest: 0 };
+  const dates = Array.from(dateSet).sort();
+  let longest = 1, run = 1;
+  for(let i=1;i<dates.length;i++){
+    const prev = new Date(dates[i-1] + 'T00:00:00');
+    const cur = new Date(dates[i] + 'T00:00:00');
+    const diff = Math.round((cur - prev) / 86400000);
+    run = diff === 1 ? run+1 : 1;
+    if(run > longest) longest = run;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  let cursor = new Date(today);
+  if(!dateSet.has(cursor.toISOString().slice(0,10))) cursor.setDate(cursor.getDate()-1);
+  let current = 0;
+  while(dateSet.has(cursor.toISOString().slice(0,10))){ current++; cursor.setDate(cursor.getDate()-1); }
+  return { current, longest };
+}
+
+function renderCombinedStreak(){
+  const el = document.getElementById('combined-streak-num');
+  if(el) el.textContent = combinedStreak().current;
+}
+
+function renderWeeklyRecap(){
+  const el = document.getElementById('weekly-recap-text');
+  if(!el) return;
+  const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate()-7);
+  const cutoffISO = cutoff.toISOString().slice(0,10);
+  const sessions = state.logs.filter(l=>l.date > cutoffISO).length;
+  const mocksCount = state.mocks.filter(m=>m.date > cutoffISO).length;
+  const entries = allReadEntries().filter(e=>e.date > cutoffISO);
+  const pages = entries.reduce((a,e)=>a+e.pages,0);
+  const booksTouched = new Set(entries.map(e=>e.bookId)).size;
+
+  if(!sessions && !mocksCount && !pages){
+    el.textContent = "A quiet week so far — even a little counts 🌱";
+    return;
+  }
+  const parts = [];
+  if(booksTouched) parts.push(booksTouched + ' book' + (booksTouched!==1?'s':'') + ' touched');
+  if(pages) parts.push(pages + ' pages');
+  if(sessions) parts.push(sessions + ' study session' + (sessions!==1?'s':''));
+  if(mocksCount) parts.push(mocksCount + ' mock' + (mocksCount!==1?'s':''));
+  el.textContent = 'This week: ' + parts.join(', ') + ' 🌸';
+}
+
+function renderAffirmation(){
+  const el = document.getElementById('hero-affirmation');
+  if(!el) return;
+  const totalPagesAll = Object.values(state.books).reduce((a,b)=>a+totalPagesRead(b),0);
+  const totalHrs = state.logs.reduce((a,l)=>a+l.hrs,0);
+  const streak = combinedStreak().current;
+  const templates = [
+    'Top 1 LEA 2027 is already yours. Today\'s proof: page ' + totalPagesAll + '.',
+    streak + ' day' + (streak!==1?'s':'') + ' of showing up — Ar. Ella Alexis Pelarion is being built right now.',
+    (totalHrs%1===0?totalHrs:totalHrs.toFixed(1)) + ' hours logged. That\'s the version of you who passes, taking shape.'
+  ];
+  const day = new Date().getDate() + new Date().getMonth() * 31;
+  el.textContent = templates[day % templates.length];
+}
+
 function updateStats(){
   const totalHrs=state.logs.reduce((a,l)=>a+l.hrs,0);
   document.getElementById('s-hrs').textContent=totalHrs%1===0?totalHrs:totalHrs.toFixed(1);
   const totals=state.mocks.map(m=>calcTotal(m.scores)).filter(v=>v!==null);
   document.getElementById('s-best').textContent=totals.length?Math.max(...totals).toFixed(1)+'%':'—';
+  renderCombinedStreak();
+  renderWeakCluster();
+  renderMockTrend();
+  renderWeeklyRecap();
+  renderAffirmation();
+}
+
+function clusterAverages(){
+  const sums = {A:0,B:0,C:0}, counts = {A:0,B:0,C:0};
+  state.mocks.forEach(m=>{
+    ['A','B','C'].forEach(k=>{
+      const v = m.scores[k];
+      if(v!==null && v!==undefined){ sums[k]+=v; counts[k]++; }
+    });
+  });
+  const avgs = {};
+  ['A','B','C'].forEach(k=>{ avgs[k] = counts[k] ? sums[k]/counts[k] : null; });
+  return avgs;
+}
+
+function renderWeakCluster(){
+  const el = document.getElementById('weak-cluster-flag');
+  if(!el) return;
+  const avgs = clusterAverages();
+  const valid = Object.entries(avgs).filter(([k,v])=>v!==null);
+  if(valid.length < 2){ el.innerHTML = ''; return; }
+  valid.sort((a,b)=>a[1]-b[1]);
+  const [weakKey, weakAvg] = valid[0];
+  const cl = CLUSTERS[weakKey];
+  el.innerHTML = `<div style="background:var(--pink-50);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;margin:10px 0;font-size:12px;color:var(--text-mid);">
+    📍 <strong style="color:${cl.color}">Focus area: ${cl.label}</strong> — averaging ${weakAvg.toFixed(1)}% across your mocks, your lowest cluster
+  </div>`;
+}
+
+function renderMockTrend(){
+  const el = document.getElementById('mock-trend-wrap');
+  if(!el) return;
+  const scored = state.mocks
+    .map(m=>({date:m.date, total: calcTotal(m.scores)}))
+    .filter(x=>x.total!==null)
+    .sort((a,b)=> a.date < b.date ? -1 : 1);
+  if(scored.length < 2){ el.innerHTML = ''; return; }
+
+  const totals = scored.map(s=>s.total);
+  const min = Math.min(...totals, 70);
+  const max = Math.max(...totals, 70);
+  const range = (max - min) || 1;
+  const w = 300, h = 90, pad = 8;
+  const stepX = (w - 2*pad) / (scored.length - 1);
+  const yFor = (t) => h - pad - ((t - min) / range) * (h - 2*pad);
+  const points = scored.map((s,i)=> `${pad + i*stepX},${yFor(s.total).toFixed(1)}`).join(' ');
+  const dots = scored.map((s,i)=> `<circle cx="${pad + i*stepX}" cy="${yFor(s.total).toFixed(1)}" r="2.2" fill="var(--pink-500)" />`).join('');
+  const passY = yFor(70).toFixed(1);
+  const first = totals[0], last = totals[totals.length-1];
+  const trendLabel = last > first ? '↑ Improving' : last < first ? '↓ Slipping' : '→ Steady';
+  const trendColor = last > first ? 'var(--matcha-600)' : last < first ? '#b91c1c' : 'var(--text-soft)';
+
+  el.innerHTML = `<div class="mock-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-weight:600;font-size:13px;color:var(--text-dark);">📈 Score trend</span>
+      <span style="font-size:11px;font-weight:700;color:${trendColor};">${trendLabel}</span>
+    </div>
+    <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:80px;display:block;">
+      <line x1="${pad}" y1="${passY}" x2="${w-pad}" y2="${passY}" stroke="#e34948" stroke-width="1" stroke-dasharray="3,3" opacity="0.4" />
+      <polyline points="${points}" fill="none" stroke="var(--pink-500)" stroke-width="2" />
+      ${dots}
+    </svg>
+    <div style="font-size:10px;color:var(--text-soft);margin-top:4px;">dashed line = 70% passing mark</div>
+  </div>`;
 }
 
 // ─── TABS ────────────────────────────────────────────────
 function switchTab(t){
-  ['calendar','studylog','progress','mocks'].forEach(id=>{
+  ['calendar','studylog','progress','mocks','reading'].forEach(id=>{
     document.getElementById('tab-'+id).style.display = id===t?'block':'none';
   });
   document.querySelectorAll('.tab-btn').forEach((btn,i)=>{
-    btn.classList.toggle('active', ['calendar','studylog','progress','mocks'][i]===t);
+    btn.classList.toggle('active', ['calendar','studylog','progress','mocks','reading'][i]===t);
   });
 }
 
 // ─── EXPORT / IMPORT ─────────────────────────────────────
 function exportData(){
   const data = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     logs: state.logs,
     mocks: state.mocks,
+    books: state.books,
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -1321,12 +1921,14 @@ function importData(e){
       if(!confirm(`Import ${data.logs.length} study log(s) and ${data.mocks.length} mock test(s)?\n\nThis will REPLACE your current data.`)) return;
       state.logs = data.logs;
       state.mocks = data.mocks;
+      state.books = data.books || state.books;
       fbSave();
       renderLogList();
       renderMockList();
       renderProgress();
       updateStats();
       renderDashboard();
+      renderReading();
       showToast('✅ Data restored successfully! 🌸');
     } catch(err) {
       alert('Oops! That file doesn\'t look right. Please use a file exported from this tracker.');
@@ -1336,7 +1938,8 @@ function importData(e){
   reader.readAsText(file);
 }
 
-function showToast(msg){
+function showToast(msg, duration){
+  duration = duration || 3000;
   let t = document.getElementById('toast');
   if(!t){
     t = document.createElement('div');
@@ -1347,16 +1950,20 @@ function showToast(msg){
       font-size:13px; font-weight:500; padding:10px 20px;
       border-radius:99px; box-shadow:0 4px 20px rgba(0,0,0,0.15);
       opacity:0; transition:all .3s; z-index:9999; white-space:nowrap;
+      max-width:90vw; text-align:center;
     `;
     document.body.appendChild(t);
   }
+  t.style.whiteSpace = msg.length > 60 ? 'normal' : 'nowrap';
+  t.style.borderRadius = msg.length > 60 ? '16px' : '99px';
   t.textContent = msg;
   t.style.opacity = '1';
   t.style.transform = 'translateX(-50%) translateY(0)';
-  setTimeout(()=>{
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(()=>{
     t.style.opacity = '0';
     t.style.transform = 'translateX(-50%) translateY(20px)';
-  }, 3000);
+  }, duration);
 }
 
 init();
