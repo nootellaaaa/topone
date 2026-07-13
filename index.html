@@ -572,14 +572,38 @@ footer {
 }
 
 @media (max-width: 500px) {
+  .page { padding: 0 0.9rem; }
   .sidebar { grid-template-columns: 1fr; }
   .stat-val { font-size: 1.4rem; }
+  .hero-banner { flex-wrap: wrap; }
   .hero-name { font-size: 1.25rem; }
   .hero-badges { gap: .4rem; }
   .hero-badge { font-size: 11px; padding: 4px 10px; }
   .tab-btn { font-size: 11px; }
   .data-btn { font-size: 11px; padding: 5px 10px; }
   .exam-chip { font-size: 11px; padding: 5px 10px; }
+}
+
+/* Very narrow screens — foldable cover displays (e.g. Galaxy Z Fold, ~320-380px) */
+@media (max-width: 380px) {
+  .page { padding: 0 0.65rem; }
+  .hero-banner { padding: 1rem 0.75rem; gap: .5rem; }
+  .hero-petals { font-size: 1.15rem; }
+  .hero-name { font-size: 1.05rem; }
+  .hero-eyebrow { font-size: .95rem; }
+  .hero-badge { font-size: 10px; padding: 3px 8px; }
+  .card, .quote-card, .countdown-card, .mock-card, .rd-book-card, .form-card { padding: 1rem; }
+  .stat-val { font-size: 1.2rem; }
+  .stat-label { font-size: 9px; }
+  .tab-btn { font-size: 10px; padding: 7px 4px; gap: 3px; }
+  .cn-block { min-width: 54px; padding: .55rem .6rem; }
+  .cn-num { font-size: 1.2rem; }
+  .rd-log-row input[type="number"] { width: 72px; }
+  .rd-log-row input[type="date"] { font-size: 11px; padding: 6px 7px; }
+  .cluster-input { width: 56px; }
+  .mrr-name { font-size: 10px; }
+  .sc-row { font-size: 11px; }
+  .sc-row .sc-date { width: 62px; }
 }
 </style>
 </head>
@@ -1094,22 +1118,17 @@ let calYear, calMonth, selectedDate;
 let fbSaveTimer = null;
 
 // ─── FIREBASE SYNC ───────────────────────────────────────
-function flushSave(useBeacon){
+function flushSave(useKeepalive){
   clearTimeout(fbSaveTimer);
+  fbSaveTimer = null;
   state.updatedAt = Date.now();
   const payload = JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, schedule: state.schedule, letter: state.letter, updatedAt: state.updatedAt});
   try { localStorage.setItem('lea2027_site', payload); } catch(e){}
-  if(useBeacon && navigator.sendBeacon){
-    try {
-      navigator.sendBeacon(FB_URL + '.json', new Blob([payload], {type:'application/json'}));
-      return;
-    } catch(e){ /* fall through to fetch */ }
-  }
   fetch(FB_URL + '.json', {
     method: 'PUT',
     headers: {'Content-Type':'application/json'},
     body: payload,
-    keepalive: true
+    keepalive: !!useKeepalive
   }).catch(function(e){ console.warn('Firebase save failed'); });
 }
 
@@ -1820,6 +1839,10 @@ function init(){
   document.getElementById('log-date').value = selectedDate;
   document.getElementById('mock-date').value = selectedDate;
   document.getElementById('rd-start').value = selectedDate;
+
+  // load from local cache FIRST (synchronous) so the very first paint shows
+  // real data instead of blank defaults while Firebase catches up in the background
+  loadLocalStorage();
 
   // render everything immediately
   setDailyQuote();
