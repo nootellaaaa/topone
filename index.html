@@ -1339,6 +1339,7 @@ function deleteBook(id){
     const title = state.books[id].title;
     delete state.books[id];
     pendingDeleteId = null;
+    if(editingBookId === id) editingBookId = null;
     save();
     renderReading();
     renderProgress();
@@ -1405,6 +1406,48 @@ function deleteBookEntry(id, date){
   renderCalendar();
 }
 
+let editingBookId = null;
+
+function escapeAttr(s){
+  return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+function editBook(id){
+  editingBookId = id;
+  pendingDeleteId = null;
+  renderReading();
+}
+
+function cancelBookEdit(){
+  editingBookId = null;
+  renderReading();
+}
+
+function saveBookEdit(id){
+  const title = document.getElementById('eb-title-'+id).value.trim();
+  const pages = parseInt(document.getElementById('eb-pages-'+id).value, 10);
+  const pace = parseInt(document.getElementById('eb-pace-'+id).value, 10);
+  const start = document.getElementById('eb-start-'+id).value || state.books[id].start;
+  const subject = document.getElementById('eb-subject-'+id).value.trim();
+
+  if(!title || !pages || !pace){ alert('Title, total pages, and target pace are required.'); return; }
+  const dup = Object.entries(state.books).some(([bid,b]) => bid !== id && b.title.trim().toLowerCase() === title.toLowerCase());
+  if(dup){ alert('"' + title + '" is already on your shelf.'); return; }
+
+  const book = state.books[id];
+  book.title = title;
+  book.totalPages = pages;
+  book.pace = pace;
+  book.start = start;
+  book.subject = subject;
+  editingBookId = null;
+  save();
+  renderReading();
+  renderProgress();
+  renderCalendar();
+  showToast('✏️ "' + title + '" updated!');
+}
+
 function renderReading(){
   const { current, longest } = readingStreaks();
   document.getElementById('s-reading-streak').textContent = current;
@@ -1450,13 +1493,47 @@ function renderReading(){
     }).join('') + `</div>` : '';
 
     return `<div class="rd-book-card">
+      ${editingBookId === id ? `
+      <div class="rd-book-hdr">
+        <div class="rd-book-title">✏️ Editing "${b.title}"</div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input" id="eb-title-${id}" value="${escapeAttr(b.title)}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start date</label>
+          <input class="form-input" type="date" id="eb-start-${id}" value="${b.start}" />
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Total pages</label>
+          <input class="form-input" type="number" id="eb-pages-${id}" value="${b.totalPages}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target pace (pages/day)</label>
+          <input class="form-input" type="number" id="eb-pace-${id}" value="${b.pace}" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subject (optional)</label>
+        <input class="form-input" id="eb-subject-${id}" list="subj-list" value="${escapeAttr(b.subject)}" />
+      </div>
+      <button class="btn-add" onclick="saveBookEdit('${id}')">💾 Save changes</button>
+      <button class="data-btn" style="margin-top:8px;" onclick="cancelBookEdit()">Cancel</button>
+      ` : `
       <div class="rd-book-hdr">
         <div>
           <div class="rd-book-title">${b.title} <span class="rd-pace-tag ${pace.cls}">${pace.label}</span></div>
           <div class="rd-book-meta">${b.totalPages} pages · target ${b.pace}/day</div>
           ${b.subject ? `<div class="rd-subject-tag">${b.subject}</div>` : ''}
         </div>
-        <button class="btn-del ${pendingDeleteId===id?'confirm':''}" onclick="deleteBook('${id}')">${pendingDeleteId===id?'Sure?':'🗑'}</button>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn-del" onclick="editBook('${id}')" title="Edit book details">✏️</button>
+          <button class="btn-del ${pendingDeleteId===id?'confirm':''}" onclick="deleteBook('${id}')">${pendingDeleteId===id?'Sure?':'🗑'}</button>
+        </div>
       </div>
       <div class="pb-track"><div class="pb-fill" style="width:${pct}%;background:linear-gradient(90deg,#f95f9688,var(--pink-500))"></div></div>
       <div class="rd-remaining-text">${remaining} pages remaining · ${pct}% done</div>
@@ -1472,6 +1549,7 @@ function renderReading(){
       </div>
       <input type="text" class="rd-log-note" id="rd-log-note-${id}" placeholder="note (optional) — e.g. finished a chapter" />
       ${historyHtml}
+      `}
     </div>`;
   }).join('');
 }
