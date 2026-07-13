@@ -180,7 +180,7 @@ header {
 
 /* ─── QUOTE CARD ─── */
 .quote-card {
-  background: linear-gradient(150deg, var(--matcha-50), #fff8fd);
+  background: linear-gradient(150deg, var(--matcha-50), var(--warm-white));
   border: 1.5px solid rgba(110,163,76,.2);
   border-radius: 20px; padding: 1.35rem;
   box-shadow: var(--shadow-sm);
@@ -200,7 +200,7 @@ header {
 .quote-ref { font-size: 11px; color: var(--matcha-500); font-weight: 500; }
 
 /* ─── STATS ROW ─── */
-.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: .75rem; margin-bottom: 1.1rem; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .75rem; margin-bottom: 1.1rem; }
 .stat-card {
   background: var(--warm-white); border: 1.5px solid var(--border);
   border-radius: 16px; padding: .9rem 1rem;
@@ -217,12 +217,14 @@ header {
   display: flex; gap: 6px; margin-bottom: 1.1rem;
   background: var(--pink-50); border-radius: 14px; padding: 5px;
   border: 1.5px solid var(--border);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
 .tab-btn {
   flex: 1; padding: 8px 6px; border: none; background: transparent;
   border-radius: 10px; font-size: 12px; font-weight: 500;
   cursor: pointer; color: var(--text-soft); font-family: 'DM Sans', sans-serif;
   transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+  white-space: nowrap; min-width: fit-content;
 }
 .tab-btn.active {
   background: #fff; color: var(--pink-500);
@@ -373,7 +375,7 @@ header {
 .cluster-input {
   width: 70px; text-align: center; padding: 7px 6px;
   border: 1.5px solid var(--pink-100); border-radius: 10px;
-  background: #fff; font-family: 'DM Sans', sans-serif; font-size: 13px;
+  background: var(--warm-white); font-family: 'DM Sans', sans-serif; font-size: 13px;
   color: var(--text-dark); flex-shrink: 0;
 }
 .cluster-input:focus { outline: none; border-color: var(--pink-300); }
@@ -414,13 +416,13 @@ header {
   background: var(--warm-white); border: 1.5px solid var(--border);
   border-radius: 16px; padding: 1rem 1.1rem; margin-bottom: 8px;
 }
-.rd-book-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.rd-book-hdr { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
 .rd-book-title { font-weight: 600; font-size: 13px; color: var(--text-dark); }
 .rd-book-meta { font-size: 11px; color: var(--text-soft); margin-top: 1px; }
 .rd-remaining-text { font-size: 11px; color: var(--text-soft); margin-top: 5px; }
 .rd-log-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1.5px solid var(--border); flex-wrap: wrap; }
-.rd-log-row input[type="date"] { padding: 7px 9px; border: 1.5px solid var(--pink-100); border-radius: 10px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark); }
-.rd-log-row input[type="number"] { width: 90px; padding: 7px 9px; border: 1.5px solid var(--pink-100); border-radius: 10px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark); }
+.rd-log-row input[type="date"] { padding: 7px 9px; border: 1.5px solid var(--pink-100); border-radius: 10px; background: var(--warm-white); font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark); }
+.rd-log-row input[type="number"] { width: 90px; padding: 7px 9px; border: 1.5px solid var(--pink-100); border-radius: 10px; background: var(--warm-white); font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark); }
 .rd-log-row input:focus { outline: none; border-color: var(--pink-300); }
 .rd-log-btn { background: var(--pink-500); color: #fff; border: none; border-radius: 10px; padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; }
 .rd-log-btn:hover { background: var(--pink-600); }
@@ -435,7 +437,7 @@ header {
 .rd-pace-tag.behind { background: #fff1f1; color: #b91c1c; }
 .rd-finish-text { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
 .rd-subject-tag { font-size: 10px; color: var(--matcha-600); background: var(--matcha-100); padding: 2px 8px; border-radius: 99px; display: inline-block; margin-top: 4px; }
-.rd-log-note { width: 100%; margin-top: 6px; padding: 7px 9px; border: 1.5px solid var(--pink-100); border-radius: 10px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark); }
+.rd-log-note { width: 100%; margin-top: 6px; padding: 7px 9px; border: 1.5px solid var(--pink-100); border-radius: 10px; background: var(--warm-white); font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark); }
 .rd-log-note:focus { outline: none; border-color: var(--pink-300); }
 .rd-reminder { font-size: 12px; color: var(--text-soft); font-style: italic; margin: -4px 0 1rem; }
 .cal-day-reading-dot { position: absolute; top: 5px; left: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--pink-400); }
@@ -454,6 +456,8 @@ body.dark-mode {
   --border: rgba(255,182,215,0.14);
 }
 body.dark-mode .bg-blob { opacity: 0.18; }
+body.dark-mode .hero-banner { background: linear-gradient(135deg, #3a2530 0%, #26301f 50%, #3a2530 100%); }
+body.dark-mode .countdown-card { background: linear-gradient(135deg, #3a2530, #26301f); }
 
 /* ─── MILESTONE GLOW ─── */
 .countdown-card.milestone {
@@ -475,6 +479,24 @@ body.dark-mode .bg-blob { opacity: 0.18; }
 .rd-badges { margin-top: 6px; font-size: 13px; letter-spacing: 2px; }
 .rd-catchup { font-size: 11px; color: #b91c1c; margin-top: 2px; }
 
+/* ─── LETTER TO FUTURE YOU ─── */
+.letter-textarea {
+  width: 100%; min-height: 120px; padding: 10px 12px;
+  border: 1.5px solid var(--pink-100); border-radius: 12px;
+  background: var(--warm-white); color: var(--text-dark);
+  font-family: 'DM Sans', sans-serif; font-size: 12px; line-height: 1.5;
+  resize: vertical; margin-bottom: 8px;
+}
+.letter-textarea:focus { outline: none; border-color: var(--pink-300); }
+.letter-sealed {
+  text-align: center; padding: 1.25rem 0.5rem; font-size: 12px; color: var(--text-soft);
+}
+.letter-sealed .letter-lock-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+.letter-opened-text {
+  font-family: 'Caveat', cursive; font-size: 1.1rem; line-height: 1.5;
+  color: var(--text-dark); white-space: pre-wrap; margin-bottom: 10px;
+}
+
 /* ─── QUICK LOG BANNER ─── */
 .quick-log-banner {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -483,7 +505,7 @@ body.dark-mode .bg-blob { opacity: 0.18; }
 }
 .quick-log-banner select, .quick-log-banner input {
   padding: 6px 9px; border-radius: 8px; border: 1.5px solid var(--pink-100);
-  background: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark);
+  background: var(--warm-white); font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark);
 }
 .quick-log-banner input[type="number"] { width: 70px; }
 .quick-log-banner button {
@@ -491,9 +513,9 @@ body.dark-mode .bg-blob { opacity: 0.18; }
   padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
 }
 .ql-dismiss { cursor: pointer; color: var(--text-soft); margin-left: auto; font-size: 14px; }
-.sc-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--pink-50); margin-bottom: 5px; font-size: 12px; }
+.sc-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--pink-50); margin-bottom: 5px; font-size: 12px; flex-wrap: wrap; }
 .sc-row .sc-date { font-weight: 600; color: var(--text-mid); width: 78px; flex-shrink: 0; }
-.sc-row .sc-label { flex: 1; color: var(--text-dark); }
+.sc-row .sc-label { flex: 1; min-width: 110px; color: var(--text-dark); }
 .sc-row .sc-phase-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; background: var(--matcha-100); color: var(--matcha-600); flex-shrink: 0; }
 .sc-row .sc-del { cursor: pointer; color: var(--text-soft); flex-shrink: 0; }
 .sc-row .sc-del:hover { color: #b91c1c; }
@@ -610,7 +632,7 @@ footer {
     <!-- ── LEFT / MAIN ── -->
     <div class="main-col">
       <!-- Stats -->
-      <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
+      <div class="stats-row">
         <div class="stat-card">
           <div class="stat-val" id="s-days">—</div>
           <div class="stat-label">Days left</div>
@@ -796,6 +818,22 @@ footer {
         <button class="btn-add" onclick="addMock()">💾 Save mock test</button>
         <div id="weak-cluster-flag"></div>
         <div id="mock-trend-wrap"></div>
+
+        <div class="mock-card" style="margin-bottom:1rem;">
+          <div style="font-weight:600;font-size:13px;color:var(--text-dark);margin-bottom:8px;">🎯 Score-needed calculator</div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Target average (%)</label>
+              <input class="form-input" type="number" id="calc-target" value="90" min="1" max="100" oninput="renderScoreCalc()" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mocks remaining before exam</label>
+              <input class="form-input" type="number" id="calc-remaining" value="5" min="1" oninput="renderScoreCalc()" />
+            </div>
+          </div>
+          <div id="calc-result" style="font-size:12px;color:var(--text-mid);line-height:1.5;"></div>
+        </div>
+
         <div style="margin-top:1rem;" id="mock-list"></div>
       </div>
 
@@ -803,7 +841,7 @@ footer {
       <div id="tab-reading" class="card" style="display:none;">
         <div class="card-title">📚 Reading tracker</div>
 
-        <div class="stats-row" style="margin-bottom:.75rem; grid-template-columns:repeat(3,1fr);">
+        <div class="stats-row" style="margin-bottom:.75rem;">
           <div class="stat-card">
             <div class="stat-val" id="rd-longest">0</div>
             <div class="stat-label">Longest streak</div>
@@ -882,6 +920,12 @@ footer {
         <div class="quote-label"><span class="quote-leaf">🍃</span> Daily word</div>
         <div class="quote-text" id="daily-quote">Loading...</div>
         <div class="quote-ref" id="daily-ref"></div>
+      </div>
+
+      <!-- Letter to Future You -->
+      <div class="card">
+        <div class="card-title"><span class="icon">💌</span> Letter to Future You</div>
+        <div id="letter-body"></div>
       </div>
 
       <!-- Next sessions -->
@@ -1045,7 +1089,7 @@ const QUOTES = [
 const FB_URL = 'https://toponelea2027-default-rtdb.asia-southeast1.firebasedatabase.app/ella';
 
 // ─── STATE ──────────────────────────────────────────────
-let state = {logs:[], mocks:[], books:{}, examDate:'2027-01-14', schedule:DEFAULT_SCHEDULE.slice(), updatedAt:0};
+let state = {logs:[], mocks:[], books:{}, examDate:'2027-01-14', schedule:DEFAULT_SCHEDULE.slice(), letter:{text:'', sealed:false, everSealed:false}, updatedAt:0};
 let calYear, calMonth, selectedDate;
 let fbSaveTimer = null;
 
@@ -1053,7 +1097,7 @@ let fbSaveTimer = null;
 function flushSave(useBeacon){
   clearTimeout(fbSaveTimer);
   state.updatedAt = Date.now();
-  const payload = JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, schedule: state.schedule, updatedAt: state.updatedAt});
+  const payload = JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, schedule: state.schedule, letter: state.letter, updatedAt: state.updatedAt});
   try { localStorage.setItem('lea2027_site', payload); } catch(e){}
   if(useBeacon && navigator.sendBeacon){
     try {
@@ -1074,7 +1118,7 @@ function fbSave(){
   fbSaveTimer = setTimeout(function(){ flushSave(false); }, 400);
   try {
     state.updatedAt = Date.now();
-    localStorage.setItem('lea2027_site', JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, schedule: state.schedule, updatedAt: state.updatedAt}));
+    localStorage.setItem('lea2027_site', JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, schedule: state.schedule, letter: state.letter, updatedAt: state.updatedAt}));
   } catch(e){}
 }
 
@@ -1101,6 +1145,7 @@ function fbLoad(callback){
         state.books = remote.books || defaultBooks();
         state.examDate = remote.examDate || '2027-01-14';
         state.schedule = remote.schedule || DEFAULT_SCHEDULE.slice();
+        state.letter = remote.letter || defaultLetter();
         state.updatedAt = remoteTime;
         try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(e){}
         showSyncStatus('✅ Synced!');
@@ -1110,6 +1155,7 @@ function fbLoad(callback){
         state.books = local.books || defaultBooks();
         state.examDate = local.examDate || '2027-01-14';
         state.schedule = local.schedule || DEFAULT_SCHEDULE.slice();
+        state.letter = local.letter || defaultLetter();
         state.updatedAt = localTime;
         // local is newer than what's on Firebase (e.g. a save never finished) — push it back up
         flushSave(false);
@@ -1117,6 +1163,7 @@ function fbLoad(callback){
       } else {
         state.books = defaultBooks();
         state.schedule = DEFAULT_SCHEDULE.slice();
+        state.letter = defaultLetter();
         showSyncStatus('📱 Ready!');
       }
       if(callback) callback();
@@ -1128,14 +1175,20 @@ function fbLoad(callback){
         state.books = local.books || defaultBooks();
         state.examDate = local.examDate || '2027-01-14';
         state.schedule = local.schedule || DEFAULT_SCHEDULE.slice();
+        state.letter = local.letter || defaultLetter();
         state.updatedAt = localTime;
       } else {
         state.books = defaultBooks();
         state.schedule = DEFAULT_SCHEDULE.slice();
+        state.letter = defaultLetter();
       }
       showSyncStatus('📱 Ready!');
       if(callback) callback();
     });
+}
+
+function defaultLetter(){
+  return { text: '', sealed: false, everSealed: false };
 }
 
 function readLocalStorage(){
@@ -1147,8 +1200,63 @@ function readLocalStorage(){
 
 function loadLocalStorage(){
   const p = readLocalStorage();
-  if(p){ state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); state.examDate = p.examDate||'2027-01-14'; state.schedule = p.schedule||DEFAULT_SCHEDULE.slice(); state.updatedAt = p.updatedAt||0; }
-  else { state.books = defaultBooks(); state.schedule = DEFAULT_SCHEDULE.slice(); }
+  if(p){ state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); state.examDate = p.examDate||'2027-01-14'; state.schedule = p.schedule||DEFAULT_SCHEDULE.slice(); state.letter = p.letter||defaultLetter(); state.updatedAt = p.updatedAt||0; }
+  else { state.books = defaultBooks(); state.schedule = DEFAULT_SCHEDULE.slice(); state.letter = defaultLetter(); }
+}
+
+// ─── LIVE CROSS-DEVICE SYNC ──────────────────────────────
+// Firebase Realtime Database streams changes over SSE — this keeps every
+// open tab/device in sync live, instead of only checking once on page load.
+let liveSyncSource = null;
+
+function startLiveSync(){
+  if(typeof EventSource === 'undefined') return;
+  try {
+    if(liveSyncSource) liveSyncSource.close();
+    liveSyncSource = new EventSource(FB_URL + '.json');
+    liveSyncSource.addEventListener('put', function(e){ handleLiveSyncEvent(e); });
+    liveSyncSource.addEventListener('patch', function(e){ handleLiveSyncEvent(e); });
+    liveSyncSource.onerror = function(){ /* EventSource auto-reconnects on its own */ };
+  } catch(e){ console.warn('Live sync unavailable:', e); }
+}
+
+function handleLiveSyncEvent(e){
+  let payload;
+  try { payload = JSON.parse(e.data); } catch(err){ return; }
+  const data = payload && payload.data;
+  if(!data) return;
+
+  // A full "put" at root gives the whole object; a "patch" (partial change)
+  // is safest to just treat as "something changed, re-fetch everything."
+  if(payload.path !== '/'){
+    fbLoad(function(){ fullRerender(); });
+    return;
+  }
+  const incomingUpdatedAt = data.updatedAt || 0;
+  if(incomingUpdatedAt <= (state.updatedAt || 0)) return; // ignore stale echoes of our own writes
+
+  state.logs = data.logs || [];
+  state.mocks = data.mocks || [];
+  state.books = data.books || defaultBooks();
+  state.examDate = data.examDate || '2027-01-14';
+  state.schedule = data.schedule || DEFAULT_SCHEDULE.slice();
+  state.letter = data.letter || defaultLetter();
+  state.updatedAt = incomingUpdatedAt;
+  try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(err){}
+
+  fullRerender();
+  renderLetter();
+  showSyncStatus('✅ Synced from another device!');
+}
+
+function fullRerender(){
+  renderLogList();
+  renderMockList();
+  renderProgress();
+  updateStats();
+  renderReading();
+  updateCountdown();
+  renderCalendar();
 }
 
 function defaultBooks(){
@@ -1632,6 +1740,63 @@ function openCramSheet(){
 }
 
 // ─── BACKUP REMINDER ─────────────────────────────────────
+// ─── LETTER TO FUTURE YOU ────────────────────────────────
+function renderLetter(){
+  const el = document.getElementById('letter-body');
+  if(!el) return;
+  const letter = state.letter || defaultLetter();
+
+  if(letter.sealed){
+    el.innerHTML = `
+      <div class="letter-sealed">
+        <span class="letter-lock-icon">🔒</span>
+        Sealed for result day. Don't peek early — future you earned this moment.
+        <div style="margin-top:10px;">
+          <button class="data-btn" onclick="unlockLetter()">Open it (result day only!)</button>
+        </div>
+      </div>
+    `;
+  } else if(letter.everSealed && letter.text){
+    el.innerHTML = `
+      <div class="letter-opened-text">${escapeAttr(letter.text).replace(/\n/g,'<br>')}</div>
+      <button class="data-btn" onclick="rewriteLetter()">✏️ Write a new one</button>
+    `;
+  } else {
+    el.innerHTML = `
+      <p style="font-size:11px;color:var(--text-soft);margin:0 0 8px;">Write something for the version of you reading this on result day — whatever you need to hear right now.</p>
+      <textarea class="letter-textarea" id="letter-draft" placeholder="Dear future Ar. Ella Alexis Pelarion...">${escapeAttr(letter.text)}</textarea>
+      <button class="btn-add" onclick="sealLetter()">🔒 Seal until result day</button>
+    `;
+  }
+}
+
+function sealLetter(){
+  const draft = document.getElementById('letter-draft');
+  const text = draft ? draft.value.trim() : '';
+  if(!text){ alert('Write a little something first, then seal it.'); return; }
+  if(!confirm('This will lock the letter until you choose to open it on result day. Continue?')) return;
+  state.letter = { text, sealed: true, everSealed: true };
+  save();
+  renderLetter();
+  showToast('💌 Letter sealed — see you on result day!');
+}
+
+function unlockLetter(){
+  if(!confirm('This should only be opened on your actual result day. Are you sure you want to open it now?')) return;
+  state.letter.sealed = false;
+  save();
+  renderLetter();
+  burstConfetti();
+  showToast('💌 Letter unlocked 🌸');
+}
+
+function rewriteLetter(){
+  if(!confirm('Start a new letter? Your current one will be replaced once you seal the new one.')) return;
+  state.letter = defaultLetter();
+  save();
+  renderLetter();
+}
+
 function checkBackupReminder(){
   if(!state.logs.length && !state.mocks.length) return;
   let last = 0;
@@ -1666,6 +1831,7 @@ function init(){
   renderProgress();
   updateStats();
   renderReading();
+  renderLetter();
 
   // then sync Firebase in background
   fbLoad(function(){
@@ -1674,7 +1840,9 @@ function init(){
     renderProgress();
     updateStats();
     renderReading();
+    renderLetter();
     checkBackupReminder();
+    startLiveSync();
   });
 }
 
@@ -2278,6 +2446,7 @@ function updateStats(){
   renderMockTrend();
   renderWeeklyRecap();
   renderAffirmation();
+  renderScoreCalc();
 }
 
 function clusterAverages(){
@@ -2344,6 +2513,45 @@ function renderMockTrend(){
   </div>`;
 }
 
+function renderScoreCalc(){
+  const targetEl = document.getElementById('calc-target');
+  const remainingEl = document.getElementById('calc-remaining');
+  const resultEl = document.getElementById('calc-result');
+  if(!targetEl || !remainingEl || !resultEl) return;
+
+  const target = parseFloat(targetEl.value);
+  const remaining = parseInt(remainingEl.value, 10);
+  const totals = state.mocks.map(m=>calcTotal(m.scores)).filter(v=>v!==null);
+
+  if(!target || target <= 0 || !remaining || remaining <= 0){
+    resultEl.innerHTML = 'Enter a target average and how many mocks you have left.';
+    return;
+  }
+
+  const soFarCount = totals.length;
+  const soFarSum = totals.reduce((a,v)=>a+v, 0);
+  const soFarAvg = soFarCount ? soFarSum / soFarCount : null;
+  const totalMocksAtEnd = soFarCount + remaining;
+  const neededSum = target * totalMocksAtEnd - soFarSum;
+  const neededAvg = neededSum / remaining;
+
+  let html = '';
+  if(soFarCount){
+    html += `<p style="margin:0 0 6px;">Current average: <strong>${soFarAvg.toFixed(1)}%</strong> across ${soFarCount} mock${soFarCount!==1?'s':''}.</p>`;
+  } else {
+    html += `<p style="margin:0 0 6px;">No mocks logged yet — this assumes you're starting from zero.</p>`;
+  }
+
+  if(neededAvg > 100){
+    html += `<p style="margin:0;color:#b91c1c;">Even scoring 100% on all ${remaining} remaining mocks won't reach a ${target}% average from here. Consider raising your remaining-mocks count, or focus on retention over the mock-average number itself — a rising trend matters more than hitting an exact figure.</p>`;
+  } else if(neededAvg <= 0){
+    html += `<p style="margin:0;color:var(--matcha-600);">You've already secured a ${target}% average — anything from here is a bonus. Keep the trend going. 🌸</p>`;
+  } else {
+    html += `<p style="margin:0;">To average <strong>${target}%</strong> by your next <strong>${remaining}</strong> mock${remaining!==1?'s':''}, you need to average <strong style="color:var(--pink-600);">${neededAvg.toFixed(1)}%</strong> on those remaining ones.</p>`;
+  }
+  resultEl.innerHTML = html;
+}
+
 // ─── TABS ────────────────────────────────────────────────
 function switchTab(t){
   ['calendar','studylog','progress','mocks','reading'].forEach(id=>{
@@ -2364,6 +2572,7 @@ function exportData(){
     books: state.books,
     examDate: state.examDate,
     schedule: state.schedule,
+    letter: state.letter,
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -2391,6 +2600,7 @@ function importData(e){
       state.books = data.books || state.books;
       state.examDate = data.examDate || state.examDate;
       state.schedule = data.schedule || state.schedule;
+      state.letter = data.letter || state.letter;
       fbSave();
       renderLogList();
       renderMockList();
@@ -2399,6 +2609,7 @@ function importData(e){
       renderReading();
       updateCountdown();
       renderCalendar();
+      renderLetter();
       showToast('✅ Data restored successfully! 🌸');
     } catch(err) {
       alert('Oops! That file doesn\'t look right. Please use a file exported from this tracker.');
