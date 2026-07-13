@@ -663,9 +663,9 @@ footer {
         </div>
 
         <div style="margin-top:1rem; padding-top:1rem; border-top:1.5px solid var(--border);">
-          <button class="btn-add" style="background:var(--matcha-500);" onclick="toggleScheduleEditor()" id="schedule-toggle-btn">✏️ Edit TopLab Schedule</button>
+          <button class="btn-add" style="background:var(--matcha-500);" onclick="toggleScheduleEditor()" id="schedule-toggle-btn">✏️ Edit Schedule</button>
           <div id="schedule-editor" style="display:none; margin-top:1rem;">
-            <p style="font-size:11px; color:var(--text-soft); margin-bottom:10px;">TopLab's schedule can shift depending on mentor availability — update it here whenever they post a change, and your calendar stays accurate.</p>
+            <p style="font-size:11px; color:var(--text-soft); margin-bottom:10px;">Keep this in sync with whatever your review centers post — TopLab, MST, or any other schedule updates.</p>
             <div class="form-grid-2">
               <div class="form-group">
                 <label class="form-label">Date</label>
@@ -690,7 +690,8 @@ footer {
               <input type="checkbox" id="sc-isexam" style="width:auto;" />
               <label class="form-label" style="margin:0;" for="sc-isexam">This is a preboard/exam date</label>
             </div>
-            <button class="btn-add" onclick="addScheduleEvent()">+ Add to schedule</button>
+            <button class="btn-add" id="sc-submit-btn" onclick="addScheduleEvent()">+ Add to schedule</button>
+            <span id="sc-cancel-edit" onclick="cancelScheduleEdit()" style="display:none; font-size:11px; color:var(--text-soft); cursor:pointer; margin-left:10px;">cancel edit</span>
             <button class="data-btn" style="margin-top:8px;" onclick="resetSchedule()">↺ Reset to TopLab default</button>
             <div id="schedule-event-list" style="margin-top:1rem; max-height:320px; overflow-y:auto;"></div>
           </div>
@@ -1684,12 +1685,15 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 // ─── SCHEDULE EDITOR ─────────────────────────────────────
+let editingScheduleIndex = null;
+
 function toggleScheduleEditor(){
   const panel = document.getElementById('schedule-editor');
   const isOpen = panel.style.display !== 'none';
   panel.style.display = isOpen ? 'none' : 'block';
-  document.getElementById('schedule-toggle-btn').textContent = isOpen ? '✏️ Edit TopLab Schedule' : '✕ Close Schedule Editor';
+  document.getElementById('schedule-toggle-btn').textContent = isOpen ? '✏️ Edit Schedule' : '✕ Close Schedule Editor';
   if(!isOpen) renderScheduleEventList();
+  else cancelScheduleEdit();
 }
 
 function addScheduleEvent(){
@@ -1698,18 +1702,47 @@ function addScheduleEvent(){
   const label = document.getElementById('sc-label').value.trim();
   const isExam = document.getElementById('sc-isexam').checked;
   if(!date || !label){ alert('Add a date and a label for this schedule entry.'); return; }
-  state.schedule.push({ date, subj: label, phase, isExam });
+
+  if(editingScheduleIndex !== null){
+    state.schedule[editingScheduleIndex] = { date, subj: label, phase, isExam };
+    showToast('📅 Entry updated!');
+  } else {
+    state.schedule.push({ date, subj: label, phase, isExam });
+    showToast('📅 Schedule updated!');
+  }
   state.schedule.sort((a,b)=> a.date < b.date ? -1 : 1);
   save();
-  document.getElementById('sc-label').value = '';
-  document.getElementById('sc-isexam').checked = false;
+  cancelScheduleEdit();
   renderScheduleEventList();
   renderCalendar();
-  showToast('📅 Schedule updated!');
+}
+
+function editScheduleEvent(index){
+  const ev = state.schedule[index];
+  document.getElementById('sc-date').value = ev.date;
+  document.getElementById('sc-phase').value = ev.phase;
+  document.getElementById('sc-label').value = ev.subj;
+  document.getElementById('sc-isexam').checked = !!ev.isExam;
+  editingScheduleIndex = index;
+  document.getElementById('sc-submit-btn').textContent = '💾 Save changes';
+  document.getElementById('sc-cancel-edit').style.display = 'inline';
+  const dateInput = document.getElementById('sc-date');
+  if(dateInput.scrollIntoView) dateInput.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function cancelScheduleEdit(){
+  editingScheduleIndex = null;
+  document.getElementById('sc-submit-btn').textContent = '+ Add to schedule';
+  document.getElementById('sc-cancel-edit').style.display = 'none';
+  document.getElementById('sc-date').value = '';
+  document.getElementById('sc-label').value = '';
+  document.getElementById('sc-isexam').checked = false;
 }
 
 function deleteScheduleEvent(index){
   state.schedule.splice(index, 1);
+  if(editingScheduleIndex === index) cancelScheduleEdit();
+  else if(editingScheduleIndex !== null && index < editingScheduleIndex) editingScheduleIndex--;
   save();
   renderScheduleEventList();
   renderCalendar();
@@ -1718,6 +1751,7 @@ function deleteScheduleEvent(index){
 function resetSchedule(){
   if(!confirm('Reset your schedule back to the original TopLab default? Any custom edits you\'ve made will be lost.')) return;
   state.schedule = DEFAULT_SCHEDULE.slice();
+  cancelScheduleEdit();
   save();
   renderScheduleEventList();
   renderCalendar();
@@ -1733,6 +1767,7 @@ function renderScheduleEventList(){
       <span class="sc-date">${new Date(s.date+'T00:00:00').toLocaleDateString('en-PH',{month:'short',day:'numeric'})}</span>
       <span class="sc-label">${s.isExam ? '📝 ' : ''}${s.subj}</span>
       <span class="sc-phase-tag">${s.phase}</span>
+      <span class="sc-del" onclick="editScheduleEvent(${s._idx})" title="Edit">✏️</span>
       <span class="sc-del" onclick="deleteScheduleEvent(${s._idx})" title="Remove">🗑</span>
     </div>
   `).join('');
