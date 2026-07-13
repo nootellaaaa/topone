@@ -1185,7 +1185,8 @@ function fbLoad(callback){
         state.letter = defaultLetter();
         showSyncStatus('📱 Ready!');
       }
-      if(callback) callback();
+      ensureValidState();
+      if(callback) safeRun('fbLoad callback', callback);
     })
     .catch(function(){
       if(local){
@@ -1201,9 +1202,16 @@ function fbLoad(callback){
         state.schedule = DEFAULT_SCHEDULE.slice();
         state.letter = defaultLetter();
       }
+      ensureValidState();
       showSyncStatus('📱 Ready!');
-      if(callback) callback();
+      if(callback) safeRun('fbLoad callback (offline)', callback);
     });
+}
+
+// Runs fn in isolation — if it throws, the error is logged instead of
+// silently aborting every render call scheduled after it.
+function safeRun(label, fn){
+  try { fn(); } catch(err){ console.error('[' + label + '] failed:', err); }
 }
 
 function defaultLetter(){
@@ -1217,10 +1225,21 @@ function readLocalStorage(){
   } catch(e){ return null; }
 }
 
+function ensureValidState(){
+  if(!Array.isArray(state.logs)) state.logs = [];
+  if(!Array.isArray(state.mocks)) state.mocks = [];
+  if(!state.books || typeof state.books !== 'object' || Array.isArray(state.books)) state.books = defaultBooks();
+  if(!Array.isArray(state.schedule)) state.schedule = DEFAULT_SCHEDULE.slice();
+  if(!state.letter || typeof state.letter !== 'object') state.letter = defaultLetter();
+  if(!state.examDate || typeof state.examDate !== 'string') state.examDate = '2027-01-14';
+  if(typeof state.updatedAt !== 'number') state.updatedAt = 0;
+}
+
 function loadLocalStorage(){
   const p = readLocalStorage();
   if(p){ state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); state.examDate = p.examDate||'2027-01-14'; state.schedule = p.schedule||DEFAULT_SCHEDULE.slice(); state.letter = p.letter||defaultLetter(); state.updatedAt = p.updatedAt||0; }
   else { state.books = defaultBooks(); state.schedule = DEFAULT_SCHEDULE.slice(); state.letter = defaultLetter(); }
+  ensureValidState();
 }
 
 // ─── LIVE CROSS-DEVICE SYNC ──────────────────────────────
@@ -1261,10 +1280,13 @@ function handleLiveSyncEvent(e){
   state.schedule = data.schedule || DEFAULT_SCHEDULE.slice();
   state.letter = data.letter || defaultLetter();
   state.updatedAt = incomingUpdatedAt;
+  ensureValidState();
   try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(err){}
 
-  fullRerender();
-  renderLetter();
+  safeRun('live sync rerender', function(){
+    fullRerender();
+    renderLetter();
+  });
   showSyncStatus('✅ Synced from another device!');
 }
 
@@ -1310,7 +1332,7 @@ function totalPagesRead(book){
 
 function allReadEntries(){
   const entries = [];
-  Object.entries(state.books).forEach(([id, book])=>{
+  Object.entries(state.books || {}).forEach(([id, book])=>{
     Object.entries(book.progress).forEach(([date, v])=>{
       const pages = entryPages(v);
       if(pages > 0) entries.push({ date, pages, hours: entryHours(v), note: entryNote(v), subject: book.subject, bookId: id, bookTitle: book.title });
@@ -1433,7 +1455,7 @@ function addBook(){
       alert('Add a title, total pages, and a target pace to continue.');
       return;
     }
-    const dup = Object.values(state.books).some(b => b.title.trim().toLowerCase() === title.toLowerCase());
+    const dup = Object.values(state.books || {}).some(b => b.title.trim().toLowerCase() === title.toLowerCase());
     if(dup){
       alert('"' + title + '" is already on your shelf.');
       return;
@@ -1558,7 +1580,7 @@ function saveBookEdit(id){
   const subject = document.getElementById('eb-subject-'+id).value.trim();
 
   if(!title || !pages || !pace){ alert('Title, total pages, and target pace are required.'); return; }
-  const dup = Object.entries(state.books).some(([bid,b]) => bid !== id && b.title.trim().toLowerCase() === title.toLowerCase());
+  const dup = Object.entries(state.books || {}).some(([bid,b]) => bid !== id && b.title.trim().toLowerCase() === title.toLowerCase());
   if(dup){ alert('"' + title + '" is already on your shelf.'); return; }
 
   const book = state.books[id];
@@ -1589,14 +1611,14 @@ function renderReading(){
   const todayDates = new Set(allReadEntries().map(e=>e.date));
   const hour = new Date().getHours();
   const reminderEl = document.getElementById('rd-reminder');
-  if(hour >= 18 && !todayDates.has(todayStr()) && Object.keys(state.books).length){
+  if(hour >= 18 && !todayDates.has(todayStr()) && Object.keys(state.books || {}).length){
     reminderEl.textContent = "🌙 Haven't logged today yet — even a few pages keeps the streak going.";
   } else {
     reminderEl.textContent = '';
   }
 
   const el = document.getElementById('rd-book-list');
-  const ids = Object.keys(state.books);
+  const ids = Object.keys(state.books || {});
   if(!ids.length){
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">📖</div><div class="empty-text">No books on the shelf yet — add one above!</div></div>`;
     return;
@@ -1685,7 +1707,7 @@ function renderReading(){
 function renderQuickLogBanner(){
   const banner = document.getElementById('quick-log-banner');
   if(!banner) return;
-  const bookIds = Object.keys(state.books);
+  const bookIds = Object.keys(state.books || {});
   let dismissedToday = false;
   try { dismissedToday = localStorage.getItem('lea2027_ql_dismiss') === todayStr(); } catch(e){}
   const loggedToday = allReadEntries().some(e=>e.date === todayStr());
@@ -1844,28 +1866,29 @@ function init(){
   // real data instead of blank defaults while Firebase catches up in the background
   loadLocalStorage();
 
-  // render everything immediately
-  setDailyQuote();
-  updateCountdown();
-  renderCalendar();
-  renderUpcoming();
-  renderLogList();
-  renderMockList();
-  renderProgress();
-  updateStats();
-  renderReading();
-  renderLetter();
+  // render everything immediately — each call isolated so one bug can't
+  // silently prevent everything scheduled after it from ever running
+  safeRun('setDailyQuote', setDailyQuote);
+  safeRun('updateCountdown', updateCountdown);
+  safeRun('renderCalendar', renderCalendar);
+  safeRun('renderUpcoming', renderUpcoming);
+  safeRun('renderLogList', renderLogList);
+  safeRun('renderMockList', renderMockList);
+  safeRun('renderProgress', renderProgress);
+  safeRun('updateStats', updateStats);
+  safeRun('renderReading', renderReading);
+  safeRun('renderLetter', renderLetter);
 
   // then sync Firebase in background
   fbLoad(function(){
-    renderLogList();
-    renderMockList();
-    renderProgress();
-    updateStats();
-    renderReading();
-    renderLetter();
-    checkBackupReminder();
-    startLiveSync();
+    safeRun('renderLogList (post-sync)', renderLogList);
+    safeRun('renderMockList (post-sync)', renderMockList);
+    safeRun('renderProgress (post-sync)', renderProgress);
+    safeRun('updateStats (post-sync)', updateStats);
+    safeRun('renderReading (post-sync)', renderReading);
+    safeRun('renderLetter (post-sync)', renderLetter);
+    safeRun('checkBackupReminder', checkBackupReminder);
+    safeRun('startLiveSync', startLiveSync);
   });
 }
 
@@ -2447,7 +2470,7 @@ function renderWeeklyRecap(){
 function renderAffirmation(){
   const el = document.getElementById('hero-affirmation');
   if(!el) return;
-  const totalPagesAll = Object.values(state.books).reduce((a,b)=>a+totalPagesRead(b),0);
+  const totalPagesAll = Object.values(state.books || {}).reduce((a,b)=>a+totalPagesRead(b),0);
   const totalHrs = state.logs.reduce((a,l)=>a+l.hrs,0);
   const streak = combinedStreak().current;
   const templates = [
