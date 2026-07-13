@@ -9,6 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='pg' cx='40%25' cy='35%25' r='60%25'><stop offset='0%25' stop-color='%23ffb3d1'/><stop offset='100%25' stop-color='%23e83d7a'/></radialGradient></defs><circle cx='50' cy='50' r='50' fill='url(%23pg)'/><text x='50' y='68' font-family='Georgia,serif' font-size='62' font-weight='bold' text-anchor='middle' fill='%23ffffff'>1</text></svg>" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='pg' cx='40%25' cy='35%25' r='60%25'><stop offset='0%25' stop-color='%23ffb3d1'/><stop offset='100%25' stop-color='%23e83d7a'/></radialGradient></defs><circle cx='50' cy='50' r='50' fill='url(%23pg)'/><text x='50' y='68' font-family='Georgia,serif' font-size='62' font-weight='bold' text-anchor='middle' fill='%23ffffff'>1</text></svg>" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="theme-color" content="#e83d7a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="LEA 2027" />
 <style>
 :root {
   --pink-50: #fff0f5;
@@ -468,6 +475,34 @@ body.dark-mode .bg-blob { opacity: 0.18; }
 .rd-badges { margin-top: 6px; font-size: 13px; letter-spacing: 2px; }
 .rd-catchup { font-size: 11px; color: #b91c1c; margin-top: 2px; }
 
+/* ─── QUICK LOG BANNER ─── */
+.quick-log-banner {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--pink-50); border: 1.5px solid var(--border); border-radius: 14px;
+  padding: 10px 14px; margin-bottom: 1rem; font-size: 13px; color: var(--text-mid);
+}
+.quick-log-banner select, .quick-log-banner input {
+  padding: 6px 9px; border-radius: 8px; border: 1.5px solid var(--pink-100);
+  background: #fff; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-dark);
+}
+.quick-log-banner input[type="number"] { width: 70px; }
+.quick-log-banner button {
+  background: var(--pink-500); color: #fff; border: none; border-radius: 8px;
+  padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.ql-dismiss { cursor: pointer; color: var(--text-soft); margin-left: auto; font-size: 14px; }
+
+/* ─── CRAM SHEET (print only) ─── */
+.cram-only { display: none; }
+#cram-sheet-print h1 { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 4px; }
+#cram-sheet-print h2 { font-family: 'DM Serif Display', serif; font-size: 15px; margin: 16px 0 6px; color: var(--pink-600); }
+#cram-sheet-print p, #cram-sheet-print li { font-size: 12px; line-height: 1.5; color: #2d1f28; }
+@media print {
+  body * { visibility: hidden; }
+  #cram-sheet-print, #cram-sheet-print * { visibility: visible; }
+  #cram-sheet-print { display: block; position: absolute; top: 0; left: 0; width: 100%; padding: 1.5rem; }
+}
+
 /* ─── EMPTY STATES ─── */
 .empty-state { text-align: center; padding: 2rem 1rem; color: var(--text-soft); }
 .empty-icon { font-size: 2rem; margin-bottom: .5rem; }
@@ -554,11 +589,13 @@ footer {
       <span id="sync-status" style="font-size:11px;color:var(--matcha-500);opacity:0;transition:opacity .4s;font-family:'Caveat',cursive;font-size:13px;"></span>
       <button class="data-btn" onclick="exportData()" title="Save your logs & scores to a file">💾 Export</button>
       <button class="data-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙 Dark</button>
+      <button class="data-btn" onclick="openCramSheet()" title="Print a one-page exam-day summary">🖨️ Cram Sheet</button>
       <label class="data-btn import-label" title="Restore logs & scores from a file">
         📂 Import
         <input type="file" id="import-file" accept=".json" onchange="importData(event)" style="display:none;" />
       </label>
-      <div class="exam-chip">📅 Jan 14, 2027</div>
+      <span id="exam-chip-display" class="exam-chip" onclick="toggleExamEdit()" style="cursor:pointer;" title="Click to change your exam date">📅 <span id="exam-chip-text">Jan 14, 2027</span> ✏️</span>
+      <input type="date" id="exam-date-input" class="exam-chip" style="display:none;" onchange="setExamDate(this.value)" />
     </div>
   </header>
 
@@ -584,6 +621,15 @@ footer {
           <div class="stat-val" id="s-reading-streak">0</div>
           <div class="stat-label">Reading streak</div>
         </div>
+      </div>
+
+      <!-- Quick log today -->
+      <div class="quick-log-banner" id="quick-log-banner" style="display:none;">
+        <span>📖 Haven't logged today yet —</span>
+        <select id="ql-book"></select>
+        <input type="number" id="ql-pages" min="1" placeholder="pages" />
+        <button onclick="quickLogToday()">Log</button>
+        <span class="ql-dismiss" onclick="dismissQuickLog()" title="Dismiss for today">✕</span>
       </div>
 
       <!-- Tabs -->
@@ -773,7 +819,7 @@ footer {
           <div class="cn-block"><div class="cn-num" id="cd-weeks">—</div><div class="cn-unit">weeks</div></div>
           <div class="cn-block"><div class="cn-num" id="cd-months">—</div><div class="cn-unit">mos</div></div>
         </div>
-        <div class="countdown-date">January 14, 2027 · LEA</div>
+        <div class="countdown-date" id="cd-date-text">January 14, 2027 · LEA</div>
         <div class="countdown-handwriting" id="cd-message">You've got this! 🌿</div>
       </div>
 
@@ -809,6 +855,8 @@ footer {
 
   <footer>made with 💗 for Ella · keep going, future Ar. Pelarion! 🏛️</footer>
 </div>
+
+<div id="cram-sheet-print" class="cram-only"></div>
 
 <script>
 // ─── DATA ───────────────────────────────────────────────
@@ -952,11 +1000,11 @@ const QUOTES = [
   {text:"So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you.",ref:"Isaiah 41:10"},
 ];
 
-const EXAM_DATE = new Date('2027-01-14T08:00:00');
+// Exam date is now dynamic — see state.examDate and getExamDate()
 const FB_URL = 'https://toponelea2027-default-rtdb.asia-southeast1.firebasedatabase.app/ella';
 
 // ─── STATE ──────────────────────────────────────────────
-let state = {logs:[], mocks:[], books:{}, updatedAt:0};
+let state = {logs:[], mocks:[], books:{}, examDate:'2027-01-14', updatedAt:0};
 let calYear, calMonth, selectedDate;
 let fbSaveTimer = null;
 
@@ -964,7 +1012,7 @@ let fbSaveTimer = null;
 function flushSave(useBeacon){
   clearTimeout(fbSaveTimer);
   state.updatedAt = Date.now();
-  const payload = JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, updatedAt: state.updatedAt});
+  const payload = JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, updatedAt: state.updatedAt});
   try { localStorage.setItem('lea2027_site', payload); } catch(e){}
   if(useBeacon && navigator.sendBeacon){
     try {
@@ -985,7 +1033,7 @@ function fbSave(){
   fbSaveTimer = setTimeout(function(){ flushSave(false); }, 400);
   try {
     state.updatedAt = Date.now();
-    localStorage.setItem('lea2027_site', JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, updatedAt: state.updatedAt}));
+    localStorage.setItem('lea2027_site', JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, updatedAt: state.updatedAt}));
   } catch(e){}
 }
 
@@ -1010,6 +1058,7 @@ function fbLoad(callback){
         state.logs = remote.logs;
         state.mocks = remote.mocks;
         state.books = remote.books || defaultBooks();
+        state.examDate = remote.examDate || '2027-01-14';
         state.updatedAt = remoteTime;
         try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(e){}
         showSyncStatus('✅ Synced!');
@@ -1017,6 +1066,7 @@ function fbLoad(callback){
         state.logs = local.logs || [];
         state.mocks = local.mocks || [];
         state.books = local.books || defaultBooks();
+        state.examDate = local.examDate || '2027-01-14';
         state.updatedAt = localTime;
         // local is newer than what's on Firebase (e.g. a save never finished) — push it back up
         flushSave(false);
@@ -1032,6 +1082,7 @@ function fbLoad(callback){
         state.logs = local.logs || [];
         state.mocks = local.mocks || [];
         state.books = local.books || defaultBooks();
+        state.examDate = local.examDate || '2027-01-14';
         state.updatedAt = localTime;
       } else {
         state.books = defaultBooks();
@@ -1050,7 +1101,7 @@ function readLocalStorage(){
 
 function loadLocalStorage(){
   const p = readLocalStorage();
-  if(p){ state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); state.updatedAt = p.updatedAt||0; }
+  if(p){ state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); state.examDate = p.examDate||'2027-01-14'; state.updatedAt = p.updatedAt||0; }
   else { state.books = defaultBooks(); }
 }
 
@@ -1089,7 +1140,7 @@ function allReadEntries(){
   Object.entries(state.books).forEach(([id, book])=>{
     Object.entries(book.progress).forEach(([date, v])=>{
       const pages = entryPages(v);
-      if(pages > 0) entries.push({ date, pages, hours: entryHours(v), subject: book.subject, bookId: id, bookTitle: book.title });
+      if(pages > 0) entries.push({ date, pages, hours: entryHours(v), note: entryNote(v), subject: book.subject, bookId: id, bookTitle: book.title });
     });
   });
   return entries;
@@ -1161,16 +1212,38 @@ function milestoneBadges(pct){
   return html;
 }
 
-function estFinishText(book){
+function estFinishDate(book){
   const actual = totalPagesRead(book);
   const remaining = book.totalPages - actual;
-  if(remaining <= 0) return 'Finished!';
+  if(remaining <= 0) return null;
   const elapsed = daysElapsed(book);
   const avgPace = actual > 0 ? actual / elapsed : book.pace;
   const usablePace = avgPace > 0 ? avgPace : book.pace;
   const daysNeeded = Math.ceil(remaining / usablePace);
-  const finish = new Date(); finish.setDate(finish.getDate() + daysNeeded);
+  const finish = new Date(); finish.setHours(0,0,0,0); finish.setDate(finish.getDate() + daysNeeded);
+  return finish;
+}
+
+function estFinishText(book){
+  const finish = estFinishDate(book);
+  if(!finish) return 'Finished!';
   return 'Est. finish ' + finish.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+}
+
+function earliestRefresherDate(){
+  const refresherDates = SCHEDULE.filter(s=>s.phase==='refresher').map(s=>s.date).sort();
+  return refresherDates.length ? new Date(refresherDates[0] + 'T00:00:00') : null;
+}
+
+function refresherWarning(book){
+  const finish = estFinishDate(book);
+  const refresherStart = earliestRefresherDate();
+  if(!finish || !refresherStart) return null;
+  if(finish > refresherStart){
+    const fmt = refresherStart.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+    return '⚠️ Won\'t finish before your refresher phase starts (' + fmt + ') at this pace';
+  }
+  return null;
 }
 
 function addBook(){
@@ -1295,6 +1368,7 @@ function renderReading(){
   renderCombinedStreak();
   renderWeeklyRecap();
   renderAffirmation();
+  renderQuickLogBanner();
 
   const todayDates = new Set(allReadEntries().map(e=>e.date));
   const hour = new Date().getHours();
@@ -1343,6 +1417,7 @@ function renderReading(){
       <div class="rd-badges">${milestoneBadges(pct)}</div>
       <div class="rd-finish-text">${finishText}</div>
       ${pace.catchUp > 0 ? `<div class="rd-catchup">📍 a little behind — ${pace.catchUp} pages today gets you back on track</div>` : ''}
+      ${(() => { const w = refresherWarning(b); return w ? `<div class="rd-catchup">${w}</div>` : ''; })()}
       <div class="rd-log-row">
         <input type="date" id="rd-log-date-${id}" value="${todayStr()}" />
         <input type="number" id="rd-log-pages-${id}" min="1" placeholder="pages read" />
@@ -1354,6 +1429,95 @@ function renderReading(){
     </div>`;
   }).join('');
 }
+
+// ─── QUICK LOG TODAY ─────────────────────────────────────
+function renderQuickLogBanner(){
+  const banner = document.getElementById('quick-log-banner');
+  if(!banner) return;
+  const bookIds = Object.keys(state.books);
+  let dismissedToday = false;
+  try { dismissedToday = localStorage.getItem('lea2027_ql_dismiss') === todayStr(); } catch(e){}
+  const loggedToday = allReadEntries().some(e=>e.date === todayStr());
+  if(!bookIds.length || loggedToday || dismissedToday){ banner.style.display = 'none'; return; }
+  banner.style.display = 'flex';
+  const sel = document.getElementById('ql-book');
+  sel.innerHTML = bookIds.map(id => `<option value="${id}">${state.books[id].title}</option>`).join('');
+}
+
+function quickLogToday(){
+  const id = document.getElementById('ql-book').value;
+  const pagesEl = document.getElementById('ql-pages');
+  const n = parseInt(pagesEl.value, 10);
+  if(!id || !pagesEl.value || isNaN(n) || n <= 0){ alert('Pick a book and enter how many pages you read.'); return; }
+  const book = state.books[id];
+  const prevRead = totalPagesRead(book);
+  book.progress[todayStr()] = { pages: n, hours: 0, note: '' };
+  save();
+  pagesEl.value = '';
+  renderReading();
+  renderProgress();
+  renderCalendar();
+  const newRead = totalPagesRead(book);
+  if(prevRead < book.totalPages && newRead >= book.totalPages){
+    burstConfetti();
+    showToast('🎉 Finished "' + book.title + '"!', 5000);
+  } else {
+    showToast('📖 Logged ' + n + ' pages — nice!');
+  }
+}
+
+function dismissQuickLog(){
+  try { localStorage.setItem('lea2027_ql_dismiss', todayStr()); } catch(e){}
+  renderQuickLogBanner();
+}
+
+// ─── CRAM SHEET ──────────────────────────────────────────
+function openCramSheet(){
+  const el = document.getElementById('cram-sheet-print');
+  const days = Math.max(0, Math.floor((getExamDate() - new Date())/86400000));
+  const streak = combinedStreak().current;
+
+  const avgs = clusterAverages();
+  const valid = Object.entries(avgs).filter(([k,v])=>v!==null).sort((a,b)=>a[1]-b[1]);
+  const focusHtml = valid.length ? `<p><strong>${CLUSTERS[valid[0][0]].label}</strong> — averaging ${valid[0][1].toFixed(1)}%, your lowest cluster</p>` : '<p>Log a couple mock tests to see your focus area here.</p>';
+
+  const scoredMocks = state.mocks.map(m=>({m, total: calcTotal(m.scores)})).filter(x=>x.total!==null);
+  let bestHtml = '<p>No mocks logged yet.</p>';
+  if(scoredMocks.length){
+    const best = scoredMocks.slice().sort((a,b)=>b.total-a.total)[0];
+    bestHtml = `<p><strong>${best.total.toFixed(1)}%</strong> on ${best.m.date}<br>
+      A: ${best.m.scores.A ?? '—'}% · B: ${best.m.scores.B ?? '—'}% · C: ${best.m.scores.C ?? '—'}%</p>`;
+  }
+
+  const notes = allReadEntries().filter(e=>e.note).sort((a,b)=> b.date < a.date ? -1 : 1).slice(0,10);
+  const notesHtml = notes.length
+    ? '<ul>' + notes.map(n=>`<li><strong>${n.date}</strong> (${n.bookTitle}): ${n.note}</li>`).join('') + '</ul>'
+    : '<p>No reading notes yet.</p>';
+
+  el.innerHTML = `
+    <h1>🌸 Cram Sheet — ${new Date().toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'})}</h1>
+    <p><strong>${days} days left</strong> · ${streak}-day streak · Top 1 LEA 2027</p>
+    <h2>📍 Focus area</h2>
+    ${focusHtml}
+    <h2>🏆 Best mock</h2>
+    ${bestHtml}
+    <h2>📝 Recent reading notes</h2>
+    ${notesHtml}
+  `;
+  setTimeout(()=>window.print(), 100);
+}
+
+// ─── BACKUP REMINDER ─────────────────────────────────────
+function checkBackupReminder(){
+  if(!state.logs.length && !state.mocks.length) return;
+  let last = 0;
+  try { last = parseInt(localStorage.getItem('lea2027_last_export'), 10) || 0; } catch(e){}
+  const daysSince = (Date.now() - last) / 86400000;
+  if(daysSince > 14){
+    setTimeout(()=> showToast('💾 It\'s been a while — hit Export to back up your progress.', 6000), 2000);
+  }
+}
+
 
 // ─── INIT ────────────────────────────────────────────────
 function init(){
@@ -1386,6 +1550,7 @@ function init(){
     renderProgress();
     updateStats();
     renderReading();
+    checkBackupReminder();
   });
 }
 
@@ -1401,8 +1566,11 @@ const MILESTONE_MESSAGES = {
   0: "🏛️ Exam day! You are so ready."
 };
 
+function getExamDate(){ return new Date((state.examDate || '2027-01-14') + 'T08:00:00'); }
+
 function updateCountdown(){
-  const diff = EXAM_DATE - new Date();
+  const examDate = getExamDate();
+  const diff = examDate - new Date();
   const days = Math.max(0, Math.floor(diff/86400000));
   document.getElementById('cd-days').textContent = days;
   document.getElementById('cd-weeks').textContent = Math.floor(days/7);
@@ -1412,6 +1580,37 @@ function updateCountdown(){
   document.getElementById('cd-message').textContent = msg;
   const card = document.querySelector('.countdown-card');
   if(card) card.classList.toggle('milestone', !!MILESTONE_MESSAGES[days]);
+
+  const shortFmt = examDate.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  const longFmt = examDate.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+  const chipText = document.getElementById('exam-chip-text');
+  const dateText = document.getElementById('cd-date-text');
+  if(chipText) chipText.textContent = shortFmt;
+  if(dateText) dateText.textContent = longFmt + ' · LEA';
+}
+
+// ─── EXAM DATE EDITING ───────────────────────────────────
+function toggleExamEdit(){
+  const display = document.getElementById('exam-chip-display');
+  const input = document.getElementById('exam-date-input');
+  display.style.display = 'none';
+  input.value = state.examDate || '2027-01-14';
+  input.style.display = 'inline-block';
+  input.focus();
+  if(input.showPicker) { try{ input.showPicker(); }catch(e){} }
+}
+
+function setExamDate(value){
+  const display = document.getElementById('exam-chip-display');
+  const input = document.getElementById('exam-date-input');
+  if(value){
+    state.examDate = value;
+    save();
+    updateCountdown();
+    showToast('📅 Exam date updated!');
+  }
+  input.style.display = 'none';
+  display.style.display = 'inline-block';
 }
 
 // ─── THEME ───────────────────────────────────────────────
@@ -1949,6 +2148,7 @@ function exportData(){
     logs: state.logs,
     mocks: state.mocks,
     books: state.books,
+    examDate: state.examDate,
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -1958,6 +2158,7 @@ function exportData(){
   a.download = `lea2027-backup-${dateStr}.json`;
   a.click();
   URL.revokeObjectURL(url);
+  try { localStorage.setItem('lea2027_last_export', Date.now()); } catch(e){}
   showToast('✅ Backup saved! Keep that file safe 🌸');
 }
 
@@ -1973,13 +2174,14 @@ function importData(e){
       state.logs = data.logs;
       state.mocks = data.mocks;
       state.books = data.books || state.books;
+      state.examDate = data.examDate || state.examDate;
       fbSave();
       renderLogList();
       renderMockList();
       renderProgress();
       updateStats();
-      renderDashboard();
       renderReading();
+      updateCountdown();
       showToast('✅ Data restored successfully! 🌸');
     } catch(err) {
       alert('Oops! That file doesn\'t look right. Please use a file exported from this tracker.');
