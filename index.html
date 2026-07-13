@@ -1565,6 +1565,7 @@ function logBookPages(id){
   renderReading();
   renderProgress();
   renderCalendar();
+  updateStats();
 
   const newRead = totalPagesRead(book);
   const newPct = Math.round((Math.min(newRead, book.totalPages) / book.totalPages) * 100);
@@ -1592,6 +1593,7 @@ function deleteBookEntry(id, date){
   renderReading();
   renderProgress();
   renderCalendar();
+  updateStats();
 }
 
 let editingBookId = null;
@@ -1769,6 +1771,7 @@ function quickLogToday(){
   renderReading();
   renderProgress();
   renderCalendar();
+  updateStats();
   const newRead = totalPagesRead(book);
   if(prevRead < book.totalPages && newRead >= book.totalPages){
     burstConfetti();
@@ -2352,10 +2355,10 @@ function renderProgress(){
     bySubj[l.subj]+=l.hrs;
   });
   allReadEntries().forEach(e=>{
-    if(e.subject && e.hours){
-      if(!bySubj[e.subject]) bySubj[e.subject]=0;
-      bySubj[e.subject]+=e.hours;
-    }
+    if(!e.hours) return;
+    const key = e.subject || '📖 Reading (untagged)';
+    if(!bySubj[key]) bySubj[key]=0;
+    bySubj[key]+=e.hours;
   });
   const entries = Object.entries(bySubj).sort((a,b)=>b[1]-a[1]);
   const maxH = entries.length ? Math.max(...entries.map(e=>e[1]),1) : 1;
@@ -2523,7 +2526,9 @@ function renderAffirmation(){
 }
 
 function updateStats(){
-  const totalHrs=state.logs.reduce((a,l)=>a+l.hrs,0);
+  const studyHrs=state.logs.reduce((a,l)=>a+l.hrs,0);
+  const readingHrs=allReadEntries().reduce((a,e)=>a+(e.hours||0),0);
+  const totalHrs=studyHrs+readingHrs;
   document.getElementById('s-hrs').textContent=totalHrs%1===0?totalHrs:totalHrs.toFixed(1);
   const totals=state.mocks.map(m=>calcTotal(m.scores)).filter(v=>v!==null);
   document.getElementById('s-best').textContent=totals.length?Math.max(...totals).toFixed(1)+'%':'—';
