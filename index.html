@@ -549,6 +549,17 @@ footer {
 }
 
 @media (max-width: 900px) {
+  .hero-banner { padding: 1.25rem 1rem; gap: .75rem; }
+  .hero-name { font-size: 1.5rem; }
+  .hero-petals { font-size: 1.5rem; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+  header { flex-wrap: wrap; gap: 8px; }
+}
+
+/* Collapse to a single stacked column only when there genuinely isn't
+   room for two — a Fold's unfolded screen (~830-900px) or an iPad in
+   portrait still have plenty of width for the fuller desktop layout. */
+@media (max-width: 680px) {
   .main-grid {
     grid-template-columns: 1fr;
     display: flex;
@@ -564,11 +575,6 @@ footer {
   .countdown-card { grid-column: 1 / -1; }
   .countdown-nums { gap: .5rem; }
   .cn-num { font-size: 1.4rem; }
-  .hero-banner { padding: 1.25rem 1rem; gap: .75rem; }
-  .hero-name { font-size: 1.5rem; }
-  .hero-petals { font-size: 1.5rem; }
-  .form-grid-2 { grid-template-columns: 1fr; }
-  header { flex-wrap: wrap; gap: 8px; }
 }
 
 @media (max-width: 500px) {
