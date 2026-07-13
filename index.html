@@ -651,6 +651,11 @@ footer {
     </div>
   </header>
 
+  <div id="cloud-error-banner" style="display:none; background:#fff1f1; border:1.5px solid #f5b8b8; color:#b91c1c; border-radius:14px; padding:10px 14px; margin:0.75rem 0; font-size:12px; align-items:center; gap:8px; justify-content:space-between;">
+    <span id="cloud-error-text"></span>
+    <span onclick="dismissCloudError()" style="cursor:pointer; font-weight:700; flex-shrink:0;">✕</span>
+  </div>
+
   <div class="main-grid">
 
     <!-- ── LEFT / MAIN ── -->
@@ -1129,7 +1134,28 @@ function flushSave(useKeepalive){
     headers: {'Content-Type':'application/json'},
     body: payload,
     keepalive: !!useKeepalive
-  }).catch(function(e){ console.warn('Firebase save failed'); });
+  }).then(function(res){
+    if(!res.ok){
+      res.text().then(function(t){ console.error('Firebase rejected the save:', res.status, t); });
+      showCloudSaveError(res.status);
+    }
+  }).catch(function(e){
+    console.warn('Firebase save failed (network):', e);
+    showCloudSaveError('network');
+  });
+}
+
+function showCloudSaveError(status){
+  const banner = document.getElementById('cloud-error-banner');
+  const text = document.getElementById('cloud-error-text');
+  if(!banner || !text) return;
+  text.textContent = '⚠️ Cloud sync isn\'t working (error ' + status + ') — changes are only saved on this device right now. Check your Firebase database rules.';
+  banner.style.display = 'flex';
+}
+
+function dismissCloudError(){
+  const banner = document.getElementById('cloud-error-banner');
+  if(banner) banner.style.display = 'none';
 }
 
 function fbSave(){
@@ -1153,7 +1179,13 @@ function fbLoad(callback){
   const local = readLocalStorage();
   const localTime = (local && local.updatedAt) || 0;
   fetch(FB_URL + '.json')
-    .then(function(res){ return res.json(); })
+    .then(function(res){
+      if(!res.ok){
+        res.text().then(function(t){ console.error('Firebase rejected the read:', res.status, t); });
+        showCloudSaveError(res.status);
+      }
+      return res.json();
+    })
     .then(function(data){
       const remote = (data && data.logs && data.mocks) ? data : null;
       const remoteTime = (remote && remote.updatedAt) || 0;
