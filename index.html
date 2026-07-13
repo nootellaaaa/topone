@@ -491,6 +491,12 @@ body.dark-mode .bg-blob { opacity: 0.18; }
   padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
 }
 .ql-dismiss { cursor: pointer; color: var(--text-soft); margin-left: auto; font-size: 14px; }
+.sc-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--pink-50); margin-bottom: 5px; font-size: 12px; }
+.sc-row .sc-date { font-weight: 600; color: var(--text-mid); width: 78px; flex-shrink: 0; }
+.sc-row .sc-label { flex: 1; color: var(--text-dark); }
+.sc-row .sc-phase-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; background: var(--matcha-100); color: var(--matcha-600); flex-shrink: 0; }
+.sc-row .sc-del { cursor: pointer; color: var(--text-soft); flex-shrink: 0; }
+.sc-row .sc-del:hover { color: #b91c1c; }
 
 /* ─── CRAM SHEET (print only) ─── */
 .cram-only { display: none; }
@@ -654,6 +660,40 @@ footer {
         <div class="sessions-today">
           <div class="sessions-today-label" id="selected-date-label">Today's sessions</div>
           <div id="sessions-list"></div>
+        </div>
+
+        <div style="margin-top:1rem; padding-top:1rem; border-top:1.5px solid var(--border);">
+          <button class="btn-add" style="background:var(--matcha-500);" onclick="toggleScheduleEditor()" id="schedule-toggle-btn">✏️ Edit TopLab Schedule</button>
+          <div id="schedule-editor" style="display:none; margin-top:1rem;">
+            <p style="font-size:11px; color:var(--text-soft); margin-bottom:10px;">TopLab's schedule can shift depending on mentor availability — update it here whenever they post a change, and your calendar stays accurate.</p>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Date</label>
+                <input class="form-input" type="date" id="sc-date" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phase</label>
+                <select class="form-input" id="sc-phase">
+                  <option value="review">Review</option>
+                  <option value="mid">Mid</option>
+                  <option value="mock">Mock</option>
+                  <option value="refresher">Refresher</option>
+                  <option value="intro">Intro</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Label</label>
+              <input class="form-input" type="text" id="sc-label" placeholder="e.g. Building Laws" />
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="sc-isexam" style="width:auto;" />
+              <label class="form-label" style="margin:0;" for="sc-isexam">This is a preboard/exam date</label>
+            </div>
+            <button class="btn-add" onclick="addScheduleEvent()">+ Add to schedule</button>
+            <button class="data-btn" style="margin-top:8px;" onclick="resetSchedule()">↺ Reset to TopLab default</button>
+            <div id="schedule-event-list" style="margin-top:1rem; max-height:320px; overflow-y:auto;"></div>
+          </div>
         </div>
       </div>
 
@@ -878,7 +918,7 @@ const CLUSTERS = {
   C:{label:'Arch. Design & Site Planning',weight:0.40,color:'#b5507a'},
 };
 
-const SCHEDULE = [
+const DEFAULT_SCHEDULE = [
   {date:'2026-07-25',subj:'General Assembly & Introduction',phase:'intro',isExam:false},
   {date:'2026-08-01',subj:'Theory of Architecture',skey:'TA',phase:'review',isExam:false},
   {date:'2026-08-02',subj:'Theory of Architecture',skey:'TA',phase:'review',isExam:false},
@@ -1004,7 +1044,7 @@ const QUOTES = [
 const FB_URL = 'https://toponelea2027-default-rtdb.asia-southeast1.firebasedatabase.app/ella';
 
 // ─── STATE ──────────────────────────────────────────────
-let state = {logs:[], mocks:[], books:{}, examDate:'2027-01-14', updatedAt:0};
+let state = {logs:[], mocks:[], books:{}, examDate:'2027-01-14', schedule:DEFAULT_SCHEDULE.slice(), updatedAt:0};
 let calYear, calMonth, selectedDate;
 let fbSaveTimer = null;
 
@@ -1012,7 +1052,7 @@ let fbSaveTimer = null;
 function flushSave(useBeacon){
   clearTimeout(fbSaveTimer);
   state.updatedAt = Date.now();
-  const payload = JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, updatedAt: state.updatedAt});
+  const payload = JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, schedule: state.schedule, updatedAt: state.updatedAt});
   try { localStorage.setItem('lea2027_site', payload); } catch(e){}
   if(useBeacon && navigator.sendBeacon){
     try {
@@ -1033,7 +1073,7 @@ function fbSave(){
   fbSaveTimer = setTimeout(function(){ flushSave(false); }, 400);
   try {
     state.updatedAt = Date.now();
-    localStorage.setItem('lea2027_site', JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, updatedAt: state.updatedAt}));
+    localStorage.setItem('lea2027_site', JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, schedule: state.schedule, updatedAt: state.updatedAt}));
   } catch(e){}
 }
 
@@ -1047,18 +1087,19 @@ window.addEventListener('pagehide', function(){
 function fbLoad(callback){
   showSyncStatus('☁️ Syncing...');
   const local = readLocalStorage();
+  const localTime = (local && local.updatedAt) || 0;
   fetch(FB_URL + '.json')
     .then(function(res){ return res.json(); })
     .then(function(data){
       const remote = (data && data.logs && data.mocks) ? data : null;
       const remoteTime = (remote && remote.updatedAt) || 0;
-      const localTime = (local && local.updatedAt) || 0;
 
       if(remote && remoteTime >= localTime){
         state.logs = remote.logs;
         state.mocks = remote.mocks;
         state.books = remote.books || defaultBooks();
         state.examDate = remote.examDate || '2027-01-14';
+        state.schedule = remote.schedule || DEFAULT_SCHEDULE.slice();
         state.updatedAt = remoteTime;
         try { localStorage.setItem('lea2027_site', JSON.stringify(state)); } catch(e){}
         showSyncStatus('✅ Synced!');
@@ -1067,12 +1108,14 @@ function fbLoad(callback){
         state.mocks = local.mocks || [];
         state.books = local.books || defaultBooks();
         state.examDate = local.examDate || '2027-01-14';
+        state.schedule = local.schedule || DEFAULT_SCHEDULE.slice();
         state.updatedAt = localTime;
         // local is newer than what's on Firebase (e.g. a save never finished) — push it back up
         flushSave(false);
         showSyncStatus('📱 Restored newer local data');
       } else {
         state.books = defaultBooks();
+        state.schedule = DEFAULT_SCHEDULE.slice();
         showSyncStatus('📱 Ready!');
       }
       if(callback) callback();
@@ -1083,9 +1126,11 @@ function fbLoad(callback){
         state.mocks = local.mocks || [];
         state.books = local.books || defaultBooks();
         state.examDate = local.examDate || '2027-01-14';
+        state.schedule = local.schedule || DEFAULT_SCHEDULE.slice();
         state.updatedAt = localTime;
       } else {
         state.books = defaultBooks();
+        state.schedule = DEFAULT_SCHEDULE.slice();
       }
       showSyncStatus('📱 Ready!');
       if(callback) callback();
@@ -1101,8 +1146,8 @@ function readLocalStorage(){
 
 function loadLocalStorage(){
   const p = readLocalStorage();
-  if(p){ state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); state.examDate = p.examDate||'2027-01-14'; state.updatedAt = p.updatedAt||0; }
-  else { state.books = defaultBooks(); }
+  if(p){ state.logs = p.logs||[]; state.mocks = p.mocks||[]; state.books = p.books||defaultBooks(); state.examDate = p.examDate||'2027-01-14'; state.schedule = p.schedule||DEFAULT_SCHEDULE.slice(); state.updatedAt = p.updatedAt||0; }
+  else { state.books = defaultBooks(); state.schedule = DEFAULT_SCHEDULE.slice(); }
 }
 
 function defaultBooks(){
@@ -1231,7 +1276,7 @@ function estFinishText(book){
 }
 
 function earliestRefresherDate(){
-  const refresherDates = SCHEDULE.filter(s=>s.phase==='refresher').map(s=>s.date).sort();
+  const refresherDates = state.schedule.filter(s=>s.phase==='refresher').map(s=>s.date).sort();
   return refresherDates.length ? new Date(refresherDates[0] + 'T00:00:00') : null;
 }
 
@@ -1638,6 +1683,62 @@ function setDailyQuote(){
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
+// ─── SCHEDULE EDITOR ─────────────────────────────────────
+function toggleScheduleEditor(){
+  const panel = document.getElementById('schedule-editor');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  document.getElementById('schedule-toggle-btn').textContent = isOpen ? '✏️ Edit TopLab Schedule' : '✕ Close Schedule Editor';
+  if(!isOpen) renderScheduleEventList();
+}
+
+function addScheduleEvent(){
+  const date = document.getElementById('sc-date').value;
+  const phase = document.getElementById('sc-phase').value;
+  const label = document.getElementById('sc-label').value.trim();
+  const isExam = document.getElementById('sc-isexam').checked;
+  if(!date || !label){ alert('Add a date and a label for this schedule entry.'); return; }
+  state.schedule.push({ date, subj: label, phase, isExam });
+  state.schedule.sort((a,b)=> a.date < b.date ? -1 : 1);
+  save();
+  document.getElementById('sc-label').value = '';
+  document.getElementById('sc-isexam').checked = false;
+  renderScheduleEventList();
+  renderCalendar();
+  showToast('📅 Schedule updated!');
+}
+
+function deleteScheduleEvent(index){
+  state.schedule.splice(index, 1);
+  save();
+  renderScheduleEventList();
+  renderCalendar();
+}
+
+function resetSchedule(){
+  if(!confirm('Reset your schedule back to the original TopLab default? Any custom edits you\'ve made will be lost.')) return;
+  state.schedule = DEFAULT_SCHEDULE.slice();
+  save();
+  renderScheduleEventList();
+  renderCalendar();
+  showToast('↺ Schedule reset to TopLab default');
+}
+
+function renderScheduleEventList(){
+  const el = document.getElementById('schedule-event-list');
+  if(!el) return;
+  const sorted = state.schedule.map((s,i)=>({...s, _idx:i})).sort((a,b)=> a.date < b.date ? -1 : 1);
+  el.innerHTML = sorted.map(s => `
+    <div class="sc-row">
+      <span class="sc-date">${new Date(s.date+'T00:00:00').toLocaleDateString('en-PH',{month:'short',day:'numeric'})}</span>
+      <span class="sc-label">${s.isExam ? '📝 ' : ''}${s.subj}</span>
+      <span class="sc-phase-tag">${s.phase}</span>
+      <span class="sc-del" onclick="deleteScheduleEvent(${s._idx})" title="Remove">🗑</span>
+    </div>
+  `).join('');
+}
+
+
 function changeMonth(dir){
   calMonth += dir;
   if(calMonth > 11){calMonth=0;calYear++;}
@@ -1646,7 +1747,7 @@ function changeMonth(dir){
 }
 
 function sessionsForDate(dateStr){
-  return SCHEDULE.filter(s=>s.date===dateStr);
+  return state.schedule.filter(s=>s.date===dateStr);
 }
 
 // ─── CALENDAR EVENT COLOR HELPERS ────────────────────────
@@ -1782,7 +1883,7 @@ function renderSelectedSessions(){
 // ─── UPCOMING ────────────────────────────────────────────
 function renderUpcoming(){
   const td = todayStr();
-  const next = SCHEDULE.filter(s=>s.date>=td).slice(0,5);
+  const next = state.schedule.filter(s=>s.date>=td).slice(0,5);
   const el = document.getElementById('upcoming-sessions');
   if(!next.length){el.innerHTML='<div class="no-sessions">All done! 🎉</div>';return;}
   el.innerHTML = next.map(s=>{
@@ -2149,6 +2250,7 @@ function exportData(){
     mocks: state.mocks,
     books: state.books,
     examDate: state.examDate,
+    schedule: state.schedule,
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -2175,6 +2277,7 @@ function importData(e){
       state.mocks = data.mocks;
       state.books = data.books || state.books;
       state.examDate = data.examDate || state.examDate;
+      state.schedule = data.schedule || state.schedule;
       fbSave();
       renderLogList();
       renderMockList();
@@ -2182,6 +2285,7 @@ function importData(e){
       updateStats();
       renderReading();
       updateCountdown();
+      renderCalendar();
       showToast('✅ Data restored successfully! 🌸');
     } catch(err) {
       alert('Oops! That file doesn\'t look right. Please use a file exported from this tracker.');
