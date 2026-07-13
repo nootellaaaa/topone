@@ -2520,13 +2520,18 @@ function renderAffirmation(){
   const el = document.getElementById('hero-affirmation');
   if(!el) return;
   const totalPagesAll = Object.values(state.books || {}).reduce((a,b)=>a+totalPagesRead(b),0);
-  const totalHrs = state.logs.reduce((a,l)=>a+l.hrs,0);
+  const studyHrs = state.logs.reduce((a,l)=>a+l.hrs,0);
+  const readingHrs = allReadEntries().reduce((a,e)=>a+(e.hours||0),0);
+  const totalHrs = studyHrs + readingHrs;
   const streak = combinedStreak().current;
+
   const templates = [
-    'Top 1 LEA 2027 is already yours. Today\'s proof: page ' + totalPagesAll + '.',
-    streak + ' day' + (streak!==1?'s':'') + ' of showing up — Ar. Ella Alexis Pelarion is being built right now.',
-    (totalHrs%1===0?totalHrs:totalHrs.toFixed(1)) + ' hours logged. That\'s the version of you who passes, taking shape.'
+    'Top 1 LEA 2027 is already yours. Keep proving it, one page at a time. 🏆'
   ];
+  if(totalPagesAll > 0) templates.push('Top 1 LEA 2027 is already yours. Today\'s proof: page ' + totalPagesAll + '.');
+  if(streak > 0) templates.push(streak + ' day' + (streak!==1?'s':'') + ' of showing up — Ar. Ella Alexis Pelarion is being built right now.');
+  if(totalHrs > 0) templates.push((totalHrs%1===0?totalHrs:totalHrs.toFixed(1)) + ' hours logged. That\'s the version of you who passes, taking shape.');
+
   const day = new Date().getDate() + new Date().getMonth() * 31;
   el.textContent = templates[day % templates.length];
 }
