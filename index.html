@@ -2354,7 +2354,7 @@ function updatePreview(){
 }
 
 function calcTotal(scores){
-  if(scores.A==null||scores.B==null||scores.C==null)return null;
+  if(!scores || scores.A==null||scores.B==null||scores.C==null)return null;
   return(scores.A*0.30)+(scores.B*0.30)+(scores.C*0.40);
 }
 
@@ -2386,8 +2386,9 @@ function renderMockList(){
   }
   el.innerHTML = state.mocks.map(m=>{
     const total=calcTotal(m.scores);const pass=total!==null&&total>=70;
+    const scores = m.scores || {};
     const rows=Object.entries(CLUSTERS).map(([cid,cl])=>{
-      const score=m.scores[cid];if(score===null||score===undefined)return'';
+      const score=scores[cid];if(score===null||score===undefined)return'';
       const pct=Math.min(100,Math.max(0,score));
       return `<div class="mock-result-row">
         <div class="mrr-dot" style="background:${cl.color}"></div>
@@ -2487,19 +2488,20 @@ function updateStats(){
   document.getElementById('s-hrs').textContent=totalHrs%1===0?totalHrs:totalHrs.toFixed(1);
   const totals=state.mocks.map(m=>calcTotal(m.scores)).filter(v=>v!==null);
   document.getElementById('s-best').textContent=totals.length?Math.max(...totals).toFixed(1)+'%':'—';
-  renderCombinedStreak();
-  renderWeakCluster();
-  renderMockTrend();
-  renderWeeklyRecap();
-  renderAffirmation();
-  renderScoreCalc();
+  safeRun('renderCombinedStreak', renderCombinedStreak);
+  safeRun('renderWeakCluster', renderWeakCluster);
+  safeRun('renderMockTrend', renderMockTrend);
+  safeRun('renderWeeklyRecap', renderWeeklyRecap);
+  safeRun('renderAffirmation', renderAffirmation);
+  safeRun('renderScoreCalc', renderScoreCalc);
 }
 
 function clusterAverages(){
   const sums = {A:0,B:0,C:0}, counts = {A:0,B:0,C:0};
   state.mocks.forEach(m=>{
+    const scores = m.scores || {};
     ['A','B','C'].forEach(k=>{
-      const v = m.scores[k];
+      const v = scores[k];
       if(v!==null && v!==undefined){ sums[k]+=v; counts[k]++; }
     });
   });
