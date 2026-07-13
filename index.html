@@ -1227,9 +1227,16 @@ function readLocalStorage(){
 
 function ensureValidState(){
   if(!Array.isArray(state.logs)) state.logs = [];
+  state.logs = state.logs.filter(function(l){ return l && typeof l === 'object'; });
   if(!Array.isArray(state.mocks)) state.mocks = [];
+  state.mocks = state.mocks.filter(function(m){ return m && typeof m === 'object'; });
   if(!state.books || typeof state.books !== 'object' || Array.isArray(state.books)) state.books = defaultBooks();
+  Object.keys(state.books).forEach(function(id){
+    if(!state.books[id] || typeof state.books[id] !== 'object'){ delete state.books[id]; return; }
+    if(!state.books[id].progress || typeof state.books[id].progress !== 'object') state.books[id].progress = {};
+  });
   if(!Array.isArray(state.schedule)) state.schedule = DEFAULT_SCHEDULE.slice();
+  state.schedule = state.schedule.filter(function(s){ return s && typeof s === 'object'; });
   if(!state.letter || typeof state.letter !== 'object') state.letter = defaultLetter();
   if(!state.examDate || typeof state.examDate !== 'string') state.examDate = '2027-01-14';
   if(typeof state.updatedAt !== 'number') state.updatedAt = 0;
