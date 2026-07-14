@@ -1122,6 +1122,74 @@ const QUOTES = [
 
 // Exam date is now dynamic — see state.examDate and getExamDate()
 const FB_URL = 'https://toponelea2027-default-rtdb.asia-southeast1.firebasedatabase.app/ella';
+const FIREBASE_API_KEY = 'AIzaSyD9w_q-NwTAkMPb2oZiO4_mz2b6-Wkc7Kg';
+
+// ─── ANONYMOUS AUTH ───────────────────────────────────────
+// The database now requires a signed-in user for read/write. Anonymous
+// auth gives every visitor an invisible identity — no login screen, no
+// password, just a token that proves "this is genuinely the app" instead
+// of leaving the database wide open to anyone with the URL.
+let authToken = null;
+let authRefreshToken = null;
+let authExpiresAt = 0;
+
+function firebaseSignInAnon(){
+  return fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_API_KEY, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ returnSecureToken: true })
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data && data.idToken){
+        authToken = data.idToken;
+        authRefreshToken = data.refreshToken;
+        authExpiresAt = Date.now() + (parseInt(data.expiresIn, 10) || 3600) * 1000;
+        try { localStorage.setItem('lea2027_auth', JSON.stringify({ refreshToken: authRefreshToken })); } catch(e){}
+      } else {
+        console.error('Anonymous sign-in failed:', data);
+      }
+      return authToken;
+    })
+    .catch(function(e){ console.error('Anonymous sign-in request failed:', e); return null; });
+}
+
+function firebaseRefreshAuth(){
+  if(!authRefreshToken) return firebaseSignInAnon();
+  return fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_API_KEY, {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(authRefreshToken)
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data && data.id_token){
+        authToken = data.id_token;
+        authRefreshToken = data.refresh_token;
+        authExpiresAt = Date.now() + (parseInt(data.expires_in, 10) || 3600) * 1000;
+        try { localStorage.setItem('lea2027_auth', JSON.stringify({ refreshToken: authRefreshToken })); } catch(e){}
+        return authToken;
+      }
+      return firebaseSignInAnon();
+    })
+    .catch(function(){ return firebaseSignInAnon(); });
+}
+
+// Returns a Promise resolving to a valid token, refreshing or signing in as needed.
+function ensureAuthToken(){
+  if(authToken && Date.now() < authExpiresAt - 60000){
+    return Promise.resolve(authToken);
+  }
+  if(authRefreshToken) return firebaseRefreshAuth();
+  try {
+    const saved = JSON.parse(localStorage.getItem('lea2027_auth') || 'null');
+    if(saved && saved.refreshToken){
+      authRefreshToken = saved.refreshToken;
+      return firebaseRefreshAuth();
+    }
+  } catch(e){}
+  return firebaseSignInAnon();
+}
 
 // ─── STATE ──────────────────────────────────────────────
 let state = {logs:[], mocks:[], books:{}, examDate:'2027-01-14', schedule:DEFAULT_SCHEDULE.slice(), letter:{text:'', sealed:false, everSealed:false}, updatedAt:0};
@@ -1135,19 +1203,22 @@ function flushSave(useKeepalive){
   state.updatedAt = Date.now();
   const payload = JSON.stringify({logs: state.logs, mocks: state.mocks, books: state.books, examDate: state.examDate, schedule: state.schedule, letter: state.letter, updatedAt: state.updatedAt});
   try { localStorage.setItem('lea2027_site', payload); } catch(e){}
-  fetch(FB_URL + '.json', {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json'},
-    body: payload,
-    keepalive: !!useKeepalive
-  }).then(function(res){
-    if(!res.ok){
-      res.text().then(function(t){ console.error('Firebase rejected the save:', res.status, t); });
-      showCloudSaveError(res.status);
-    }
-  }).catch(function(e){
-    console.warn('Firebase save failed (network):', e);
-    showCloudSaveError('network');
+  ensureAuthToken().then(function(token){
+    if(!token){ showCloudSaveError('auth'); return; }
+    fetch(FB_URL + '.json?auth=' + token, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: payload,
+      keepalive: !!useKeepalive
+    }).then(function(res){
+      if(!res.ok){
+        res.text().then(function(t){ console.error('Firebase rejected the save:', res.status, t); });
+        showCloudSaveError(res.status);
+      }
+    }).catch(function(e){
+      console.warn('Firebase save failed (network):', e);
+      showCloudSaveError('network');
+    });
   });
 }
 
@@ -1184,7 +1255,28 @@ function fbLoad(callback){
   showSyncStatus('☁️ Syncing...');
   const local = readLocalStorage();
   const localTime = (local && local.updatedAt) || 0;
-  fetch(FB_URL + '.json')
+  ensureAuthToken().then(function(token){
+    if(!token){
+      showCloudSaveError('auth');
+      if(local){
+        state.logs = local.logs || [];
+        state.mocks = local.mocks || [];
+        state.books = local.books || defaultBooks();
+        state.examDate = local.examDate || '2027-01-14';
+        state.schedule = local.schedule || DEFAULT_SCHEDULE.slice();
+        state.letter = local.letter || defaultLetter();
+        state.updatedAt = localTime;
+      } else {
+        state.books = defaultBooks();
+        state.schedule = DEFAULT_SCHEDULE.slice();
+        state.letter = defaultLetter();
+      }
+      ensureValidState();
+      showSyncStatus('📱 Ready!');
+      if(callback) safeRun('fbLoad callback (no auth)', callback);
+      return;
+    }
+    fetch(FB_URL + '.json?auth=' + token)
     .then(function(res){
       if(!res.ok){
         res.text().then(function(t){ console.error('Firebase rejected the read:', res.status, t); });
@@ -1244,6 +1336,7 @@ function fbLoad(callback){
       showSyncStatus('📱 Ready!');
       if(callback) safeRun('fbLoad callback (offline)', callback);
     });
+  });
 }
 
 // Runs fn in isolation — if it throws, the error is logged instead of
@@ -1292,15 +1385,25 @@ function loadLocalStorage(){
 // open tab/device in sync live, instead of only checking once on page load.
 let liveSyncSource = null;
 
+let liveSyncRefreshTimer = null;
+
 function startLiveSync(){
   if(typeof EventSource === 'undefined') return;
-  try {
-    if(liveSyncSource) liveSyncSource.close();
-    liveSyncSource = new EventSource(FB_URL + '.json');
-    liveSyncSource.addEventListener('put', function(e){ handleLiveSyncEvent(e); });
-    liveSyncSource.addEventListener('patch', function(e){ handleLiveSyncEvent(e); });
-    liveSyncSource.onerror = function(){ /* EventSource auto-reconnects on its own */ };
-  } catch(e){ console.warn('Live sync unavailable:', e); }
+  ensureAuthToken().then(function(token){
+    if(!token) return;
+    try {
+      if(liveSyncSource) liveSyncSource.close();
+      liveSyncSource = new EventSource(FB_URL + '.json?auth=' + token);
+      liveSyncSource.addEventListener('put', function(e){ handleLiveSyncEvent(e); });
+      liveSyncSource.addEventListener('patch', function(e){ handleLiveSyncEvent(e); });
+      liveSyncSource.onerror = function(){ /* EventSource auto-reconnects on its own */ };
+    } catch(e){ console.warn('Live sync unavailable:', e); }
+  });
+
+  // the auth token expires hourly — the live connection needs reconnecting
+  // with a fresh one periodically, since it can't refresh itself mid-stream
+  clearTimeout(liveSyncRefreshTimer);
+  liveSyncRefreshTimer = setTimeout(startLiveSync, 50 * 60 * 1000);
 }
 
 function handleLiveSyncEvent(e){
