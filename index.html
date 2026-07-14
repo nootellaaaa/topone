@@ -750,6 +750,7 @@ footer {
             <button class="btn-add" id="sc-submit-btn" onclick="addScheduleEvent()">+ Add to schedule</button>
             <span id="sc-cancel-edit" onclick="cancelScheduleEdit()" style="display:none; font-size:11px; color:var(--text-soft); cursor:pointer; margin-left:10px;">cancel edit</span>
             <button class="data-btn" style="margin-top:8px;" onclick="resetSchedule()">↺ Reset to TopLab default</button>
+            <button class="data-btn" style="margin-top:8px;" onclick="syncScheduleDefaults()">🔄 Pull in latest updates</button>
             <div id="schedule-event-list" style="margin-top:1rem; max-height:320px; overflow-y:auto;"></div>
           </div>
         </div>
@@ -1000,63 +1001,127 @@ const CLUSTERS = {
 
 const DEFAULT_SCHEDULE = [
   {date:'2026-07-25',subj:'General Assembly & Introduction',phase:'intro',isExam:false},
+  {date:'2026-07-25',subj:'Review Guidelines & Logbook Filing',phase:'intro',isExam:false},
   {date:'2026-08-01',subj:'Theory of Architecture',skey:'TA',phase:'review',isExam:false},
   {date:'2026-08-02',subj:'Theory of Architecture',skey:'TA',phase:'review',isExam:false},
   {date:'2026-08-03',subj:'Theory of Architecture',skey:'TA',phase:'review',isExam:false},
+  {date:'2026-08-03',subj:'MST: Building Technology Part 1',skey:'BT',phase:'review',isExam:false},
+  {date:'2026-08-04',subj:'MST: Building Technology Part 1',skey:'BT',phase:'review',isExam:false},
   {date:'2026-08-05',subj:'Theory of Architecture',skey:'TA',phase:'review',isExam:false},
+  {date:'2026-08-05',subj:'MST: Building Technology Part 1',skey:'BT',phase:'review',isExam:false},
+  {date:'2026-08-06',subj:'MST: Building Technology Part 1',skey:'BT',phase:'review',isExam:false},
   {date:'2026-08-07',subj:'Theory of Architecture',skey:'TA',phase:'review',isExam:false},
+  {date:'2026-08-07',subj:'MST: Building Technology Part 1',skey:'BT',phase:'review',isExam:false},
   {date:'2026-08-08',subj:'Theory of Architecture',skey:'TA',phase:'review',isExam:false},
   {date:'2026-08-09',subj:'Theory of Architecture',skey:'TA',phase:'review',isExam:false},
   {date:'2026-08-09',subj:'Preboard: Theory of Architecture',skey:'TA',phase:'review',isExam:true},
   {date:'2026-08-10',subj:'History of Architecture',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-10',subj:'MST: Building Technology Part 2',skey:'BT',phase:'review',isExam:false},
+  {date:'2026-08-11',subj:'MST: Building Technology Part 2',skey:'BT',phase:'review',isExam:false},
   {date:'2026-08-12',subj:'History of Architecture',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-12',subj:'MST: Building Technology Part 2',skey:'BT',phase:'review',isExam:false},
+  {date:'2026-08-13',subj:'MST: Building Technology Part 2',skey:'BT',phase:'review',isExam:false},
   {date:'2026-08-14',subj:'History of Architecture',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-14',subj:'MST: Building Technology Part 2',skey:'BT',phase:'review',isExam:false},
   {date:'2026-08-15',subj:'History of Architecture',skey:'HA',phase:'review',isExam:false},
   {date:'2026-08-16',subj:'History of Architecture',skey:'HA',phase:'review',isExam:false},
   {date:'2026-08-17',subj:'History of Architecture',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-17',subj:'MST: History of Architecture Part 1',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-18',subj:'MST: History of Architecture Part 1',skey:'HA',phase:'review',isExam:false},
   {date:'2026-08-19',subj:'History of Architecture',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-19',subj:'MST: History of Architecture Part 1',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-20',subj:'MST: History of Architecture Part 1',skey:'HA',phase:'review',isExam:false},
   {date:'2026-08-21',subj:'Preboard: History of Architecture',skey:'HA',phase:'review',isExam:true},
-  {date:'2026-08-22',subj:'Building Laws',skey:'BL',phase:'review',isExam:false},
-  {date:'2026-08-23',subj:'Building Laws',skey:'BL',phase:'review',isExam:false},
-  {date:'2026-08-24',subj:'Building Laws',skey:'BL',phase:'review',isExam:false},
-  {date:'2026-08-26',subj:'Building Laws',skey:'BL',phase:'review',isExam:false},
-  {date:'2026-08-28',subj:'Preboard: Building Laws',skey:'BL',phase:'review',isExam:true},
-  {date:'2026-08-29',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
-  {date:'2026-08-30',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
-  {date:'2026-08-31',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
-  {date:'2026-09-02',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
-  {date:'2026-09-04',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
-  {date:'2026-09-05',subj:'Preboard: Prof. Practice',skey:'PP',phase:'review',isExam:true},
+  {date:'2026-08-21',subj:'MST: History of Architecture Part 1',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-22',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
+  {date:'2026-08-23',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
+  {date:'2026-08-24',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
+  {date:'2026-08-24',subj:'MST: History of Architecture Part 2',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-25',subj:'MST: History of Architecture Part 2',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-26',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
+  {date:'2026-08-26',subj:'MST: History of Architecture Part 2',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-27',subj:'MST: History of Architecture Part 2',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-28',subj:'Professional Practice',skey:'PP',phase:'review',isExam:false},
+  {date:'2026-08-28',subj:'MST: History of Architecture Part 2',skey:'HA',phase:'review',isExam:false},
+  {date:'2026-08-29',subj:'Preboard: Prof. Practice',skey:'PP',phase:'review',isExam:true},
+  {date:'2026-08-30',subj:'Building Laws',skey:'BL',phase:'review',isExam:false},
+  {date:'2026-08-31',subj:'Building Laws',skey:'BL',phase:'review',isExam:false},
+  {date:'2026-08-31',subj:'MST: Building Laws',skey:'BL',phase:'review',isExam:false},
+  {date:'2026-09-01',subj:'MST: Building Laws',skey:'BL',phase:'review',isExam:false},
+  {date:'2026-09-02',subj:'Building Laws',skey:'BL',phase:'review',isExam:false},
+  {date:'2026-09-02',subj:'MST: Building Laws',skey:'BL',phase:'review',isExam:false},
+  {date:'2026-09-03',subj:'MST: Building Laws',skey:'BL',phase:'review',isExam:false},
+  {date:'2026-09-04',subj:'Building Laws',skey:'BL',phase:'review',isExam:false},
+  {date:'2026-09-04',subj:'MST: Building Laws',skey:'BL',phase:'review',isExam:false},
+  {date:'2026-09-05',subj:'Preboard: Building Laws',skey:'BL',phase:'review',isExam:true},
   {date:'2026-09-06',subj:'Building Technology – Materials',skey:'BT',phase:'review',isExam:false},
   {date:'2026-09-07',subj:'Building Technology – Materials',skey:'BT',phase:'review',isExam:false},
+  {date:'2026-09-07',subj:'MST: Building Utilities Part 1',skey:'BU',phase:'review',isExam:false},
+  {date:'2026-09-08',subj:'MST: Building Utilities Part 1',skey:'BU',phase:'review',isExam:false},
   {date:'2026-09-09',subj:'Building Technology – Materials',skey:'BT',phase:'review',isExam:false},
+  {date:'2026-09-09',subj:'MST: Building Utilities Part 1',skey:'BU',phase:'review',isExam:false},
+  {date:'2026-09-10',subj:'MST: Building Utilities Part 1',skey:'BU',phase:'review',isExam:false},
   {date:'2026-09-11',subj:'Building Technology – Materials',skey:'BT',phase:'review',isExam:false},
+  {date:'2026-09-11',subj:'MST: Building Utilities Part 1',skey:'BU',phase:'review',isExam:false},
   {date:'2026-09-12',subj:'Building Technology – Materials',skey:'BT',phase:'review',isExam:false},
   {date:'2026-09-13',subj:'Building Technology – Materials',skey:'BT',phase:'review',isExam:false},
   {date:'2026-09-14',subj:'Preboard: Building Technology',skey:'BT',phase:'review',isExam:true},
+  {date:'2026-09-14',subj:'MST: Building Utilities Part 2',skey:'BU',phase:'review',isExam:false},
+  {date:'2026-09-15',subj:'MST: Building Utilities Part 2',skey:'BU',phase:'review',isExam:false},
   {date:'2026-09-16',subj:'Building Utilities',skey:'BU',phase:'review',isExam:false},
+  {date:'2026-09-16',subj:'MST: Building Utilities Part 2',skey:'BU',phase:'review',isExam:false},
+  {date:'2026-09-17',subj:'MST: Building Utilities Part 2',skey:'BU',phase:'review',isExam:false},
   {date:'2026-09-18',subj:'Building Utilities',skey:'BU',phase:'review',isExam:false},
+  {date:'2026-09-18',subj:'MST: Building Utilities Part 2',skey:'BU',phase:'review',isExam:false},
   {date:'2026-09-19',subj:'Building Utilities',skey:'BU',phase:'review',isExam:false},
   {date:'2026-09-20',subj:'Building Utilities',skey:'BU',phase:'review',isExam:false},
   {date:'2026-09-21',subj:'Building Utilities',skey:'BU',phase:'review',isExam:false},
+  {date:'2026-09-21',subj:'MST: Professional Practice',skey:'PP',phase:'review',isExam:false},
+  {date:'2026-09-22',subj:'MST: Professional Practice',skey:'PP',phase:'review',isExam:false},
   {date:'2026-09-23',subj:'Building Utilities',skey:'BU',phase:'review',isExam:false},
+  {date:'2026-09-23',subj:'MST: Professional Practice',skey:'PP',phase:'review',isExam:false},
+  {date:'2026-09-24',subj:'MST: Professional Practice',skey:'PP',phase:'review',isExam:false},
   {date:'2026-09-25',subj:'Building Utilities',skey:'BU',phase:'review',isExam:false},
+  {date:'2026-09-25',subj:'MST: Professional Practice',skey:'PP',phase:'review',isExam:false},
   {date:'2026-09-26',subj:'Preboard: Building Utilities',skey:'BU',phase:'review',isExam:true},
+  {date:'2026-09-27',subj:'Intro to Structural Conceptualization',skey:'SC',phase:'review',isExam:false},
   {date:'2026-09-27',subj:'Structural Conceptualization',skey:'SC',phase:'review',isExam:false},
   {date:'2026-09-28',subj:'Structural Conceptualization',skey:'SC',phase:'review',isExam:false},
+  {date:'2026-09-28',subj:'MST: Theory and Principles of Planning Part 1',skey:'TA',phase:'review',isExam:false},
+  {date:'2026-09-29',subj:'MST: Theory and Principles of Planning Part 1',skey:'TA',phase:'review',isExam:false},
   {date:'2026-09-30',subj:'Structural Conceptualization',skey:'SC',phase:'review',isExam:false},
+  {date:'2026-09-30',subj:'MST: Theory and Principles of Planning Part 1',skey:'TA',phase:'review',isExam:false},
+  {date:'2026-10-01',subj:'MST: Theory and Principles of Planning Part 1',skey:'TA',phase:'review',isExam:false},
   {date:'2026-10-02',subj:'Preboard: Structural Conceptualization',skey:'SC',phase:'review',isExam:true},
+  {date:'2026-10-02',subj:'MST: Theory and Principles of Planning Part 1',skey:'TA',phase:'review',isExam:false},
   {date:'2026-10-03',subj:'Residential Part 1',skey:'AD',phase:'review',isExam:false},
-  {date:'2026-10-04',subj:'Residential Part 2 + Commercial',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-04',subj:'Residential Part 2',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-04',subj:'Commercial',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-05',subj:'MST: Theory and Principles of Planning Part 2',skey:'TA',phase:'review',isExam:false},
+  {date:'2026-10-06',subj:'MST: Theory and Principles of Planning Part 2',skey:'TA',phase:'review',isExam:false},
   {date:'2026-10-07',subj:'Public Spaces & Recreational Design',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-07',subj:'MST: Theory and Principles of Planning Part 2',skey:'TA',phase:'review',isExam:false},
+  {date:'2026-10-08',subj:'MST: Theory and Principles of Planning Part 2',skey:'TA',phase:'review',isExam:false},
   {date:'2026-10-09',subj:'Institutional',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-09',subj:'MST: Theory and Principles of Planning Part 2',skey:'TA',phase:'review',isExam:false},
   {date:'2026-10-10',subj:'Industrial and Agricultural',skey:'AD',phase:'review',isExam:false},
   {date:'2026-10-11',subj:'Complex Projects & Facilities',skey:'AD',phase:'review',isExam:false},
   {date:'2026-10-11',subj:'Preboard: Arch. Design & Site Planning',skey:'AD',phase:'review',isExam:true},
-  {date:'2026-10-19',subj:'Fundamentals of Rule 7 & 8',skey:'AD',phase:'mid',isExam:false},
-  {date:'2026-10-21',subj:'Fundamentals of Rule 7 & 8',skey:'AD',phase:'mid',isExam:false},
-  {date:'2026-10-23',subj:'Lot Plotting',skey:'AD',phase:'mid',isExam:false},
-  {date:'2026-10-24',subj:'Lot Plotting',skey:'AD',phase:'mid',isExam:false},
+  {date:'2026-10-12',subj:'Special Memorization Course',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-12',subj:'MST: Structural Conceptualization',skey:'SC',phase:'review',isExam:false},
+  {date:'2026-10-13',subj:'MST: Structural Conceptualization',skey:'SC',phase:'review',isExam:false},
+  {date:'2026-10-14',subj:'MST: Structural Conceptualization',skey:'SC',phase:'review',isExam:false},
+  {date:'2026-10-15',subj:'MST: Structural Conceptualization',skey:'SC',phase:'review',isExam:false},
+  {date:'2026-10-16',subj:'MST: Structural Conceptualization',skey:'SC',phase:'review',isExam:false},
+  {date:'2026-10-19',subj:'Fundamentals of Rule 7 & 8',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-19',subj:'MST: Architectural Design',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-20',subj:'MST: Architectural Design',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-21',subj:'Fundamentals of Rule 7 & 8',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-21',subj:'MST: Architectural Design',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-22',subj:'MST: Architectural Design',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-23',subj:'Lot Plotting',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-23',subj:'MST: Architectural Design',skey:'AD',phase:'review',isExam:false},
+  {date:'2026-10-24',subj:'Lot Plotting',skey:'AD',phase:'review',isExam:false},
   {date:'2026-10-26',subj:'MID: Residential Part 1',skey:'AD',phase:'mid',isExam:false},
   {date:'2026-10-28',subj:'MID: Residential Part 2',skey:'AD',phase:'mid',isExam:false},
   {date:'2026-10-30',subj:'MID: Residential Part 3',skey:'AD',phase:'mid',isExam:false},
@@ -1084,6 +1149,7 @@ const DEFAULT_SCHEDULE = [
   {date:'2026-12-21',subj:'Refresher: Structural Conceptualization',skey:'SC',phase:'refresher',isExam:false},
   {date:'2027-01-10',subj:'Mock Board Exam – Whole Day',phase:'mock',isExam:true},
   {date:'2027-01-10',subj:'Coaching Session',phase:'mock',isExam:false},
+  {date:'2027-01-13',subj:'Releasing of Mockboard Exams',phase:'mock',isExam:true},
 ];
 
 const QUOTES = [
@@ -2201,6 +2267,20 @@ function resetSchedule(){
   showToast('↺ Schedule reset to TopLab default');
 }
 
+function syncScheduleDefaults(){
+  const existing = new Set(state.schedule.map(s => s.date + '|' + s.subj));
+  const missing = DEFAULT_SCHEDULE.filter(s => !existing.has(s.date + '|' + s.subj));
+  if(!missing.length){
+    showToast('✅ Already up to date — nothing new to add.');
+    return;
+  }
+  state.schedule = state.schedule.concat(missing).sort((a,b)=> a.date < b.date ? -1 : 1);
+  save();
+  renderScheduleEventList();
+  renderCalendar();
+  showToast('🔄 Added ' + missing.length + ' new schedule entr' + (missing.length===1?'y':'ies') + '!');
+}
+
 function renderScheduleEventList(){
   const el = document.getElementById('schedule-event-list');
   if(!el) return;
@@ -2241,9 +2321,21 @@ const SKEY_PALETTE = {
 };
 const EXAM_PALETTE = { bg:'#ffd6d6', color:'#b03a3a' }; // pastel red
 const REFRESH_PALETTE = { bg:'#e8f8e8', color:'#2e6e40' }; // light sage
+const MST_PALETTE = { bg:'#ffe3ee', color:'#e83d7a' }; // hot pink, for MST sessions
+
+function sessionSourceIcon(s){
+  return (s.subj && s.subj.startsWith('MST:')) ? '🎗️' : '⭐';
+}
+
+function sessionDotColor(s){
+  if(s.subj && s.subj.startsWith('MST:')) return MST_PALETTE.color;
+  const subj = SUBJECTS[s.skey];
+  return subj ? subj.color : '#e83d7a';
+}
 
 function calEventStyle(s){
   if(s.isExam) return `background:${EXAM_PALETTE.bg};color:${EXAM_PALETTE.color};`;
+  if(s.subj.startsWith('MST:')) return `background:${MST_PALETTE.bg};color:${MST_PALETTE.color};`;
   const isRefresh = s.subj.startsWith('Refresher');
   if(isRefresh) return `background:${REFRESH_PALETTE.bg};color:${REFRESH_PALETTE.color};`;
   const p = s.skey ? SKEY_PALETTE[s.skey] : null;
@@ -2253,9 +2345,10 @@ function calEventStyle(s){
 
 function calEventLabel(s){
   if(s.isExam) return '📋 ' + s.subj.replace('Preboard:','').replace('PREBOARD:','').trim().split(' ').slice(0,2).join(' ');
+  if(s.subj.startsWith('MST:')) return '🎗️ ' + s.subj.replace('MST:','').trim().split(' ').slice(0,2).join(' ');
   if(s.subj.startsWith('Refresher')) return '🔄 ' + s.subj.replace('Refresher:','').trim().split(' ').slice(0,2).join(' ');
   if(s.subj.startsWith('MID:')) return '📐 ' + s.subj.replace('MID:','').trim().split(' ').slice(0,2).join(' ');
-  return s.subj.split(' ').slice(0,3).join(' ');
+  return '⭐ ' + s.subj.split(' ').slice(0,3).join(' ');
 }
 
 function renderCalendar(){
@@ -2344,14 +2437,13 @@ function renderSelectedSessions(){
   }
   const td = todayStr();
   el.innerHTML = sessions.map(s=>{
-    const subj = SUBJECTS[s.skey]||{color:'#888',bg:'#f9f9f9'};
     const isDone = s.date < td;
     const pillCls = s.isExam ? 'exam' : isDone ? 'done' : '';
     const pillTxt = s.isExam ? '📋 Preboard' : isDone ? '✓ Done' : '📚 Session';
     return `<div class="session-item">
-      <div class="session-dot" style="background:${subj.color||'#e83d7a'}"></div>
+      <div class="session-dot" style="background:${sessionDotColor(s)}"></div>
       <div class="session-info">
-        <div class="session-name">${s.subj}</div>
+        <div class="session-name">${sessionSourceIcon(s)} ${s.subj}</div>
       </div>
       <span class="session-pill ${pillCls}">${pillTxt}</span>
     </div>`;
@@ -2365,16 +2457,15 @@ function renderUpcoming(){
   const el = document.getElementById('upcoming-sessions');
   if(!next.length){el.innerHTML='<div class="no-sessions">All done! 🎉</div>';return;}
   el.innerHTML = next.map(s=>{
-    const subj = SUBJECTS[s.skey]||{color:'#e83d7a'};
     const d = new Date(s.date+'T12:00:00');
     const fmt = d.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
     const isToday = s.date === td;
     const pillTxt = isToday ? '📅 Today' : s.isExam ? '📋 Preboard' : '📚';
     const pillCls = isToday ? '' : s.isExam ? 'exam' : '';
     return `<div class="session-item">
-      <div class="session-dot" style="background:${subj.color}"></div>
+      <div class="session-dot" style="background:${sessionDotColor(s)}"></div>
       <div class="session-info">
-        <div class="session-name">${s.subj}</div>
+        <div class="session-name">${sessionSourceIcon(s)} ${s.subj}</div>
         <div class="session-time">${fmt}</div>
       </div>
       <span class="session-pill ${pillCls}">${pillTxt}</span>
