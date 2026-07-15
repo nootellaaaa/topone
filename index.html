@@ -690,7 +690,7 @@ footer {
       <div class="quick-log-banner" id="quick-log-banner" style="display:none;">
         <span>📖 Haven't logged today yet —</span>
         <select id="ql-book"></select>
-        <input type="number" id="ql-pages" min="1" placeholder="pages" />
+        <input type="number" id="ql-pages" min="1" placeholder="you're on page..." />
         <button onclick="quickLogToday()">Log</button>
         <span class="ql-dismiss" onclick="dismissQuickLog()" title="Dismiss for today">✕</span>
       </div>
@@ -1539,6 +1539,13 @@ let addingBook = false;
 function entryPages(v){ return typeof v === 'number' ? v : (v && v.pages) || 0; }
 function entryHours(v){ return (v && typeof v === 'object' && v.hours) || 0; }
 function entryNote(v){ return (v && typeof v === 'object' && v.note) || ''; }
+function entryPage(v){ return (v && typeof v === 'object' && typeof v.page === 'number') ? v.page : null; }
+
+// Cumulative pages read across every OTHER logged date for this book —
+// used to turn "what page are you on" into a stored per-session delta.
+function cumulativeExcludingDate(book, date){
+  return totalPagesRead(book) - entryPages(book.progress[date]);
+}
 
 function totalPagesRead(book){
   return Object.values(book.progress).reduce((a,v)=>a+entryPages(v),0);
@@ -1723,7 +1730,7 @@ function logBookPages(id){
   const noteEl = document.getElementById('rd-log-note-' + id);
   const date = dateEl.value || todayStr();
   const n = parseInt(pagesEl.value, 10);
-  if(!pagesEl.value || isNaN(n) || n <= 0){ alert('Enter how many pages you read.'); return; }
+  if(!pagesEl.value || isNaN(n) || n <= 0){ alert('Enter what page you\'re on.'); return; }
   const hrs = parseFloat(hoursEl.value);
   const note = noteEl.value.trim();
 
@@ -1732,7 +1739,14 @@ function logBookPages(id){
   const prevPct = Math.round((Math.min(prevRead, book.totalPages) / book.totalPages) * 100);
   const prevStreaks = readingStreaks();
 
-  book.progress[date] = { pages: n, hours: isNaN(hrs) ? 0 : hrs, note };
+  const baseline = cumulativeExcludingDate(book, date);
+  const delta = n - baseline;
+  if(delta <= 0){
+    const ok = confirm('You\'re already logged up to page ' + baseline + ' from other sessions. Save page ' + n + ' anyway?');
+    if(!ok) return;
+  }
+
+  book.progress[date] = { pages: delta, hours: isNaN(hrs) ? 0 : hrs, note, page: n };
   save();
   pagesEl.value = '';
   hoursEl.value = '';
@@ -1754,11 +1768,14 @@ function logBookPages(id){
     burstConfetti();
     showToast('✨ New personal best! ' + newStreaks.current + '-day reading streak!', 5000);
   } else {
+    let milestoneHit = false;
     [25,50,75].forEach(threshold=>{
       if(prevPct < threshold && newPct >= threshold){
+        milestoneHit = true;
         showToast('🌸 ' + threshold + '% done with "' + book.title + '"!', 4000);
       }
     });
+    if(!milestoneHit) showToast('📖 Now on page ' + n + ' of "' + book.title + '"!');
   }
 }
 
@@ -1851,10 +1868,12 @@ function renderReading(){
       const d = new Date(date+'T12:00:00');
       const fmt = d.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
       const pages = entryPages(v);
+      const page = entryPage(v);
       const hrs = entryHours(v);
       const note = entryNote(v);
       const extra = (hrs ? ' · ' + hrs + 'h' : '') + (note ? ' · "' + note + '"' : '');
-      return `<div class="rd-history-row"><span>${fmt} — ${pages} pages${extra}</span><span class="rd-hist-del" onclick="deleteBookEntry('${id}','${date}')">remove</span></div>`;
+      const label = page !== null ? `page ${page} (+${pages})` : `${pages} pages`;
+      return `<div class="rd-history-row"><span>${fmt} — ${label}${extra}</span><span class="rd-hist-del" onclick="deleteBookEntry('${id}','${date}')">remove</span></div>`;
     }).join('') + `</div>` : '';
 
     return `<div class="rd-book-card">
@@ -1892,7 +1911,7 @@ function renderReading(){
       <div class="rd-book-hdr">
         <div>
           <div class="rd-book-title">${b.title} <span class="rd-pace-tag ${pace.cls}">${pace.label}</span></div>
-          <div class="rd-book-meta">${b.totalPages} pages · target ${b.pace}/day</div>
+          <div class="rd-book-meta">page ${read} of ${b.totalPages} · target ${b.pace}/day</div>
           ${b.subject ? `<div class="rd-subject-tag">${b.subject}</div>` : ''}
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -1908,7 +1927,7 @@ function renderReading(){
       ${(() => { const w = refresherWarning(b); return w ? `<div class="rd-catchup">${w}</div>` : ''; })()}
       <div class="rd-log-row">
         <input type="date" id="rd-log-date-${id}" value="${todayStr()}" />
-        <input type="number" id="rd-log-pages-${id}" min="1" placeholder="pages read" />
+        <input type="number" id="rd-log-pages-${id}" min="1" placeholder="you're on page..." />
         <input type="number" id="rd-log-hours-${id}" min="0" step="0.5" placeholder="hrs (optional)" style="width:100px" />
         <button class="rd-log-btn" onclick="logBookPages('${id}')">Log</button>
       </div>
@@ -1937,10 +1956,17 @@ function quickLogToday(){
   const id = document.getElementById('ql-book').value;
   const pagesEl = document.getElementById('ql-pages');
   const n = parseInt(pagesEl.value, 10);
-  if(!id || !pagesEl.value || isNaN(n) || n <= 0){ alert('Pick a book and enter how many pages you read.'); return; }
+  if(!id || !pagesEl.value || isNaN(n) || n <= 0){ alert('Pick a book and enter what page you\'re on.'); return; }
   const book = state.books[id];
+  const date = todayStr();
   const prevRead = totalPagesRead(book);
-  book.progress[todayStr()] = { pages: n, hours: 0, note: '' };
+  const baseline = cumulativeExcludingDate(book, date);
+  const delta = n - baseline;
+  if(delta <= 0){
+    const ok = confirm('You\'re already logged up to page ' + baseline + ' from other sessions. Save page ' + n + ' anyway?');
+    if(!ok) return;
+  }
+  book.progress[date] = { pages: delta, hours: 0, note: '', page: n };
   save();
   pagesEl.value = '';
   renderReading();
@@ -1952,7 +1978,7 @@ function quickLogToday(){
     burstConfetti();
     showToast('🎉 Finished "' + book.title + '"!', 5000);
   } else {
-    showToast('📖 Logged ' + n + ' pages — nice!');
+    showToast('📖 Now on page ' + n + ' — nice!');
   }
 }
 
