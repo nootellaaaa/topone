@@ -438,6 +438,7 @@ function normalizeState(){
 normalizeState();
 let saveDebounceTimer = null;
 function save(){
+  recalculateStreak();
   state._updatedAt = Date.now();
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
   setSyncStatus('syncing');
@@ -823,7 +824,6 @@ function toggleScheduleAttendance(id, checked){
       const hrs = parseHoursFromLabel(item.label);
       const dateObj = new Date(item.date);
       const dateStr = isNaN(dateObj) ? todayStr() : dateObj.toDateString();
-      registerStudyActivity(dateStr);
       state.sessions.unshift({
         id: sessionId,
         subject: 'Lecture',
@@ -1145,16 +1145,29 @@ function renderHeatmapDayDetail(){
 }
 
 // log
-function registerStudyActivity(dateStr){
-  // Only bumps the streak when the activity is for today — backfilled/past dates
-  // (e.g. marking an old class attended) shouldn't retroactively rewrite the streak.
-  if(dateStr !== todayStr()) return;
-  if(state.lastLogDate !== todayStr()){
-    const y = new Date(); y.setDate(y.getDate()-1);
-    state.streak = state.lastLogDate === y.toDateString() ? state.streak+1 : 1;
-    state.lastLogDate = todayStr();
-    if(state.streak > state.bestStreak) state.bestStreak = state.streak;
+function recalculateStreak(){
+  // Streak is fully derived from actual session dates, not a hand-incremented counter —
+  // this way deleting a session (or unchecking attendance) automatically keeps it correct
+  // instead of needing bespoke fix-up logic at every place data can be removed.
+  if(!state.sessions.length){ state.streak = 0; state.bestStreak = 0; return; }
+  const uniqueDates = [...new Set(state.sessions.map(s=>s.date))].map(d=>new Date(d)).sort((a,b)=>a-b);
+
+  let best = 1, run = 1;
+  for(let i=1;i<uniqueDates.length;i++){
+    const diffDays = Math.round((uniqueDates[i]-uniqueDates[i-1]) / 86400000);
+    if(diffDays === 1) run++; else if(diffDays > 1) run = 1;
+    if(run > best) best = run;
   }
+  state.bestStreak = best;
+
+  const dateSet = new Set(state.sessions.map(s=>s.date));
+  let streak = 0;
+  let cursor = new Date(new Date().toDateString());
+  while(dateSet.has(cursor.toDateString())){
+    streak++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  state.streak = streak;
 }
 document.getElementById('logBtn').addEventListener('click', ()=>{
   const subject = document.getElementById('logSubject').value;
@@ -1162,7 +1175,6 @@ document.getElementById('logBtn').addEventListener('click', ()=>{
   const topic = document.getElementById('logTopic').value;
   if(!hours || Number(hours)<=0){ toast('Add how many hours, first.'); return; }
   const today = todayStr();
-  registerStudyActivity(today);
   state.sessions.unshift({subject, hours:Number(hours), topic, date:today});
   save();
   document.getElementById('logHours').value=''; document.getElementById('logTopic').value='';
@@ -1750,7 +1762,6 @@ document.getElementById('bookBtn').addEventListener('click', ()=>{
   if(pages && existing) existing.pages += Number(pages);
   if(hours && Number(hours) > 0){
     const today = todayStr();
-    registerStudyActivity(today);
     state.sessions.unshift({ subject:'Reading', hours:Number(hours), topic:title, date:today });
   }
   save();
