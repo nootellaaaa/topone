@@ -160,9 +160,9 @@
   .month-nav-btn{ border:none; background:rgba(29,29,31,0.06); border-radius:50%; width:26px; height:26px; font-size:14px; line-height:1; color:var(--ink); cursor:pointer; }
   .month-nav-btn:disabled{ opacity:0.25; cursor:default; }
   .month-nav-label{ font-family:'Inter'; font-weight:700; font-size:13.5px; color:var(--ink); min-width:130px; text-align:center; }
-  .month-daylabels{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:6px; }
+  .month-daylabels{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin:0 auto 6px; max-width:320px; }
   .month-daylabels span{ text-align:center; font-size:9px; font-weight:700; color:var(--ink-faint); }
-  .month-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .month-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin:0 auto; max-width:320px; }
   .month-grid .cell{ aspect-ratio:1; border-radius:6px; background:rgba(29,29,31,0.06); }
 
   /* Segmented tabs */
@@ -363,7 +363,8 @@
       <div class="mono" style="margin-bottom:10px;">Log pages</div>
       <div class="logrow" style="margin-bottom:10px;">
         <select id="bookSelect" style="flex:1 1 160px;"></select>
-        <input type="number" id="bookPages" placeholder="pages read" style="width:110px;">
+        <input type="number" id="bookPages" placeholder="pages read" style="width:90px;">
+        <input type="number" id="bookHours" placeholder="hrs" step="0.5" style="width:70px;">
         <button class="btn" id="bookBtn">Log</button>
       </div>
       <div class="toast" id="bookToast"></div>
@@ -667,12 +668,14 @@ function toggleScheduleAttendance(id, checked){
     if(!state.sessions.some(se=>se.id===sessionId)){
       const hrs = parseHoursFromLabel(item.label);
       const dateObj = new Date(item.date);
+      const dateStr = isNaN(dateObj) ? todayStr() : dateObj.toDateString();
+      registerStudyActivity(dateStr);
       state.sessions.unshift({
         id: sessionId,
         subject: 'Lecture',
         hours: hrs,
         topic: item.label,
-        date: isNaN(dateObj) ? todayStr() : dateObj.toDateString()
+        date: dateStr
       });
     }
     item.attended = true;
@@ -892,18 +895,24 @@ function renderHeatmap(){
 }
 
 // log
+function registerStudyActivity(dateStr){
+  // Only bumps the streak when the activity is for today — backfilled/past dates
+  // (e.g. marking an old class attended) shouldn't retroactively rewrite the streak.
+  if(dateStr !== todayStr()) return;
+  if(state.lastLogDate !== todayStr()){
+    const y = new Date(); y.setDate(y.getDate()-1);
+    state.streak = state.lastLogDate === y.toDateString() ? state.streak+1 : 1;
+    state.lastLogDate = todayStr();
+    if(state.streak > state.bestStreak) state.bestStreak = state.streak;
+  }
+}
 document.getElementById('logBtn').addEventListener('click', ()=>{
   const subject = document.getElementById('logSubject').value;
   const hours = document.getElementById('logHours').value;
   const topic = document.getElementById('logTopic').value;
   if(!hours || Number(hours)<=0){ toast('Add how many hours, first.'); return; }
   const today = todayStr();
-  if(state.lastLogDate !== today){
-    const y = new Date(); y.setDate(y.getDate()-1);
-    state.streak = state.lastLogDate === y.toDateString() ? state.streak+1 : 1;
-    state.lastLogDate = today;
-    if(state.streak > state.bestStreak) state.bestStreak = state.streak;
-  }
+  registerStudyActivity(today);
   state.sessions.unshift({subject, hours:Number(hours), topic, date:today});
   save();
   document.getElementById('logHours').value=''; document.getElementById('logTopic').value='';
@@ -1485,12 +1494,18 @@ document.getElementById('bookBtn').addEventListener('click', ()=>{
   const sel = document.getElementById('bookSelect');
   const title = sel.value;
   const pages = document.getElementById('bookPages').value;
-  if(!title || !pages){ bookToast('Pick a book and pages read.'); return; }
+  const hours = document.getElementById('bookHours').value;
+  if(!title || (!pages && !hours)){ bookToast('Add pages read and/or hours spent.'); return; }
   const existing = state.books.find(b=>b.title===title);
-  if(existing) existing.pages += Number(pages);
+  if(pages && existing) existing.pages += Number(pages);
+  if(hours && Number(hours) > 0){
+    const today = todayStr();
+    registerStudyActivity(today);
+    state.sessions.unshift({ subject:'Reading', hours:Number(hours), topic:title, date:today });
+  }
   save();
-  document.getElementById('bookPages').value='';
-  renderBooks();
+  document.getElementById('bookPages').value=''; document.getElementById('bookHours').value='';
+  renderAll();
   bookToast('Logged.');
 });
 function bookToast(msg){
