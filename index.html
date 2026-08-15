@@ -239,7 +239,13 @@
   </div>
 
   <div class="card weekcard">
-    <div class="mono" style="margin-bottom:10px;">This week</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <div class="mono" id="weekRangeLabel">This week</div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button class="month-nav-btn" id="weekPrev" type="button" aria-label="Previous week">‹</button>
+        <button class="month-nav-btn" id="weekNext" type="button" aria-label="Next week">›</button>
+      </div>
+    </div>
     <div class="weekgrid" id="weekGrid"></div>
     <div id="weekDayDetail"></div>
   </div>
@@ -761,12 +767,43 @@ function shortScheduleLabel(label){
   // strip trailing parenthetical sub-topic detail for a cleaner one-line read
   return label.replace(/\s*\([^)]*\)\s*$/, '');
 }
+function getScheduleDateBounds(){
+  if(!state.schedule.length) return null;
+  let min = state.schedule[0].date, max = state.schedule[0].date;
+  state.schedule.forEach(s=>{ if(s.date < min) min = s.date; if(s.date > max) max = s.date; });
+  return {min, max};
+}
+function sundayOf(dateObj){
+  const d = new Date(dateObj); d.setDate(d.getDate() - d.getDay());
+  return d;
+}
 let selectedWeekDayISO = null;
+let weekOffset = 0;
+function clampWeekOffset(){
+  const bounds = getScheduleDateBounds();
+  if(!bounds){ weekOffset = 0; return; }
+  const today = new Date(new Date().toDateString());
+  const currentSunday = sundayOf(today);
+  const minSunday = sundayOf(new Date(bounds.min+'T00:00:00'));
+  const maxSunday = sundayOf(new Date(bounds.max+'T00:00:00'));
+  const minOffset = Math.round((minSunday - currentSunday) / (7*86400000));
+  const maxOffset = Math.round((maxSunday - currentSunday) / (7*86400000));
+  if(weekOffset < minOffset) weekOffset = minOffset;
+  if(weekOffset > maxOffset) weekOffset = maxOffset;
+}
+document.getElementById('weekPrev').addEventListener('click', ()=>{
+  weekOffset -= 1; clampWeekOffset(); renderDayPills();
+});
+document.getElementById('weekNext').addEventListener('click', ()=>{
+  weekOffset += 1; clampWeekOffset(); renderDayPills();
+});
 function renderDayPills(){
+  clampWeekOffset();
   const wrap = document.getElementById('weekGrid');
   wrap.innerHTML = '';
   const today = new Date(new Date().toDateString());
-  const sunday = new Date(today); sunday.setDate(today.getDate() - today.getDay());
+  const currentSunday = sundayOf(today);
+  const sunday = new Date(currentSunday); sunday.setDate(currentSunday.getDate() + weekOffset*7);
 
   const scheduleByDate = {};
   state.schedule.forEach(s=>{
@@ -779,10 +816,15 @@ function renderDayPills(){
     const d = new Date(sunday); d.setDate(sunday.getDate()+i);
     weekDates.push(d);
   }
+  const weekISOs = weekDates.map(d=>d.toISOString().slice(0,10));
 
-  if(selectedWeekDayISO === null){
-    selectedWeekDayISO = today.toISOString().slice(0,10);
+  if(selectedWeekDayISO === null || !weekISOs.includes(selectedWeekDayISO)){
+    const todayISO = today.toISOString().slice(0,10);
+    selectedWeekDayISO = weekISOs.includes(todayISO) ? todayISO : weekISOs[0];
   }
+
+  const rangeLabel = weekDates[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' – ' + weekDates[6].toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  document.getElementById('weekRangeLabel').textContent = weekOffset===0 ? 'This week' : rangeLabel;
 
   weekDates.forEach(d=>{
     const iso = d.toISOString().slice(0,10);
@@ -809,6 +851,17 @@ function renderDayPills(){
   });
 
   renderWeekDayDetail(weekDates.find(d=>d.toISOString().slice(0,10)===selectedWeekDayISO), scheduleByDate[selectedWeekDayISO] || []);
+
+  const bounds = getScheduleDateBounds();
+  if(bounds){
+    const minSunday = sundayOf(new Date(bounds.min+'T00:00:00'));
+    const maxSunday = sundayOf(new Date(bounds.max+'T00:00:00'));
+    document.getElementById('weekPrev').disabled = sunday <= minSunday;
+    document.getElementById('weekNext').disabled = sunday >= maxSunday;
+  } else {
+    document.getElementById('weekPrev').disabled = true;
+    document.getElementById('weekNext').disabled = true;
+  }
 }
 function renderWeekDayDetail(dateObj, items){
   const el = document.getElementById('weekDayDetail');
