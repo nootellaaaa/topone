@@ -307,12 +307,14 @@
       <div class="logrow" style="margin-bottom:8px;">
         <select id="mockCategory" style="flex:1 1 130px;"></select>
         <button class="btn" id="addCategoryBtn" type="button" style="padding:9px 12px; font-size:11px; background:rgba(29,29,31,0.08); color:var(--ink);">+ Category</button>
+        <button class="btn" id="manageCategoriesBtn" type="button" style="padding:9px 12px; font-size:11px; background:rgba(29,29,31,0.08); color:var(--ink);">Manage</button>
       </div>
       <div class="logrow" id="newCategoryRow" style="margin-bottom:8px; display:none;">
         <input type="text" id="newCategoryInput" placeholder="new category name" style="flex:1 1 130px;">
         <button class="btn" id="confirmCategoryBtn" type="button" style="padding:9px 12px; font-size:11px;">Add</button>
         <button class="btn" id="cancelCategoryBtn" type="button" style="padding:9px 12px; font-size:11px; background:rgba(29,29,31,0.08); color:var(--ink);">Cancel</button>
       </div>
+      <div id="categoryManageList" style="display:none; margin-bottom:10px;"></div>
       <div class="logrow" style="margin-bottom:10px; align-items:center;">
         <input type="text" id="mockName" placeholder="test name (optional)" style="flex:2 1 120px;">
         <input type="number" id="mockScoreGot" placeholder="score" style="width:64px;">
@@ -1095,6 +1097,71 @@ document.getElementById('confirmCategoryBtn').addEventListener('click', addNewCa
 document.getElementById('newCategoryInput').addEventListener('keydown', (e)=>{
   if(e.key === 'Enter'){ e.preventDefault(); addNewCategory(); }
 });
+
+// manage (edit/remove) mock categories
+let editingMockCategory = null;
+document.getElementById('manageCategoriesBtn').addEventListener('click', ()=>{
+  const panel = document.getElementById('categoryManageList');
+  const opening = panel.style.display === 'none';
+  panel.style.display = opening ? 'block' : 'none';
+  if(opening) renderCategoryManageList();
+});
+function renderCategoryManageList(){
+  const el = document.getElementById('categoryManageList');
+  el.innerHTML = state.mockCategories.map(cat=>{
+    if(editingMockCategory === cat){
+      return `<div class="logrow" style="margin-bottom:6px;">
+        <input type="text" data-renamecat="${cat}" value="${cat.replace(/"/g,'&quot;')}" style="flex:1 1 130px;">
+        <button class="btn" data-saverenamecat="${cat}" type="button" style="padding:6px 10px; font-size:10.5px;">Save</button>
+        <button class="btn" data-cancelrenamecat type="button" style="padding:6px 10px; font-size:10.5px; background:rgba(29,29,31,0.08); color:var(--ink);">Cancel</button>
+      </div>`;
+    }
+    return `<div class="logrow" style="margin-bottom:6px; align-items:center;">
+      <span style="flex:1; font-size:12.5px; font-weight:600;">${cat}</span>
+      <button class="btn" data-editcat="${cat}" type="button" style="padding:5px 10px; font-size:10.5px; background:rgba(29,29,31,0.08); color:var(--ink);">Edit</button>
+      <button class="btn" data-removecat="${cat}" type="button" style="padding:5px 10px; font-size:10.5px; background:rgba(255,138,101,0.15); color:var(--coral);">Remove</button>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('[data-editcat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ editingMockCategory = btn.dataset.editcat; renderCategoryManageList(); });
+  });
+  el.querySelectorAll('[data-cancelrenamecat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ editingMockCategory = null; renderCategoryManageList(); });
+  });
+  el.querySelectorAll('[data-saverenamecat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const oldName = btn.dataset.saverenamecat;
+      const input = el.querySelector(`[data-renamecat="${oldName}"]`);
+      const newName = input.value.trim();
+      if(!newName){ mockToast('Category name can\'t be empty.'); return; }
+      if(newName !== oldName && state.mockCategories.includes(newName)){ mockToast('That category already exists.'); return; }
+      const idx = state.mockCategories.indexOf(oldName);
+      if(idx > -1) state.mockCategories[idx] = newName;
+      state.mocks.forEach(m=>{ if(m.category === oldName) m.category = newName; });
+      editingMockCategory = null;
+      save();
+      renderMockCategorySelect(); renderCategoryManageList(); renderMocks(); renderMockStats();
+      mockToast('Category renamed.');
+    });
+  });
+  el.querySelectorAll('[data-removecat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const cat = btn.dataset.removecat;
+      if(state.mockCategories.length <= 1){ mockToast('Keep at least one category.'); return; }
+      state.mockCategories = state.mockCategories.filter(c=>c!==cat);
+      const fallback = 'Uncategorized';
+      const inUse = state.mocks.some(m=>m.category===cat);
+      if(inUse){
+        if(!state.mockCategories.includes(fallback)) state.mockCategories.push(fallback);
+        state.mocks.forEach(m=>{ if(m.category === cat) m.category = fallback; });
+      }
+      save();
+      renderMockCategorySelect(); renderCategoryManageList(); renderMocks(); renderMockStats();
+      mockToast(inUse ? 'Removed — those mocks moved to "Uncategorized."' : 'Category removed.');
+    });
+  });
+}
 function updateMockPctPreview(){
   const got = Number(document.getElementById('mockScoreGot').value);
   const total = Number(document.getElementById('mockScoreTotal').value);
