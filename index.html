@@ -423,6 +423,7 @@ let state = load();
 function normalizeState(){
   // defensive fallbacks — keeps one malformed/older field from crashing the whole render pass
   if(!Array.isArray(state.sessions)) state.sessions = [];
+  else state.sessions = state.sessions.filter(s => Number(s.hours) > 0); // purge stray 0-hour entries — they inflate the streak without adding real hours
   if(!Array.isArray(state.mocks)) state.mocks = [];
   if(!Array.isArray(state.books)) state.books = [];
   if(!Array.isArray(state.schedule)) state.schedule = [];
@@ -824,13 +825,19 @@ function toggleScheduleAttendance(id, checked){
       const hrs = parseHoursFromLabel(item.label);
       const dateObj = new Date(item.date);
       const dateStr = isNaN(dateObj) ? todayStr() : dateObj.toDateString();
-      state.sessions.unshift({
-        id: sessionId,
-        subject: 'Lecture',
-        hours: hrs,
-        topic: item.label,
-        date: dateStr
-      });
+      if(hrs > 0){
+        // only log a session if there's an actual hours value to log — an item with no
+        // parseable hours (e.g. a manually-added schedule item without "· Xh") still gets
+        // marked attended below, but shouldn't create a 0-hour session that inflates the
+        // streak while contributing nothing to total hours.
+        state.sessions.unshift({
+          id: sessionId,
+          subject: 'Lecture',
+          hours: hrs,
+          topic: item.label,
+          date: dateStr
+        });
+      }
     }
     item.attended = true;
   } else {
@@ -1149,8 +1156,9 @@ function recalculateStreak(){
   // Streak is fully derived from actual session dates, not a hand-incremented counter —
   // this way deleting a session (or unchecking attendance) automatically keeps it correct
   // instead of needing bespoke fix-up logic at every place data can be removed.
-  if(!state.sessions.length){ state.streak = 0; state.bestStreak = 0; return; }
-  const uniqueDates = [...new Set(state.sessions.map(s=>s.date))].map(d=>new Date(d)).sort((a,b)=>a-b);
+  const realSessions = state.sessions.filter(s => Number(s.hours) > 0); // ignore any 0-hour entries — they shouldn't count as a study day
+  if(!realSessions.length){ state.streak = 0; state.bestStreak = 0; return; }
+  const uniqueDates = [...new Set(realSessions.map(s=>s.date))].map(d=>new Date(d)).sort((a,b)=>a-b);
 
   let best = 1, run = 1;
   for(let i=1;i<uniqueDates.length;i++){
@@ -1160,7 +1168,7 @@ function recalculateStreak(){
   }
   state.bestStreak = best;
 
-  const dateSet = new Set(state.sessions.map(s=>s.date));
+  const dateSet = new Set(realSessions.map(s=>s.date));
   let streak = 0;
   let cursor = new Date(new Date().toDateString());
   while(dateSet.has(cursor.toDateString())){
