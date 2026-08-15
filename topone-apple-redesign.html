@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEA 2027</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#B9C6F2;
+    --sky-mid:#E7C7DE;
+    --sky-bottom:#FBE2C4;
+    --ink:#1D1D1F;
+    --ink-soft:#6E6E73;
+    --ink-faint:#A6A6AC;
+    --glass: rgba(255,255,255,0.62);
+    --glass-strong: rgba(255,255,255,0.86);
+    --line: rgba(29,29,31,0.08);
+    --violet:#6E63E0;
+    --coral:#FF8A65;
+    --shadow: 0 10px 30px rgba(29,29,31,0.08);
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:#F4F1EE;
+    color:var(--ink);
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    padding-bottom:50px;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; font-size:10.5px; color:var(--ink-soft); }
+  .wrap{ max-width:900px; margin:0 auto; padding:0 clamp(16px,4vw,32px); }
+
+  /* Hero */
+  .hero{
+    position:relative;
+    margin:0 0 16px;
+    border-radius:0 0 32px 32px;
+    padding:22px clamp(16px,4vw,32px) 30px;
+    background: linear-gradient(165deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-bottom) 100%);
+    overflow:hidden;
+  }
+  .hero-top{ display:flex; justify-content:space-between; align-items:flex-start; max-width:900px; margin:0 auto; }
+  .hero-top .hi{ font-weight:700; font-size:15px; }
+  .manifest{
+    display:inline-block; margin-top:5px; padding:3px 9px; border-radius:999px;
+    background:rgba(255,255,255,0.55); color:rgba(29,29,31,0.72); font-size:9.5px;
+  }
+  .hero-top .date{ font-size:11.5px; color:rgba(29,29,31,0.55); margin-top:6px; }
+  .flower{ width:78px; height:78px; opacity:0.9; }
+
+  .hero-main{ max-width:900px; margin:26px auto 0; }
+  .hero-main .label{ font-family:'IBM Plex Mono'; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; font-size:11px; color:rgba(29,29,31,0.6); }
+  .hero-main .big{ font-size:clamp(52px,10vw,74px); font-weight:800; line-height:1; margin-top:4px; letter-spacing:-0.02em; }
+  .hero-main .big .unit{ font-size:20px; font-weight:500; color:rgba(29,29,31,0.55); margin-left:8px; }
+  .hero-main .sub{ font-size:12.5px; color:rgba(29,29,31,0.6); margin-top:6px; }
+  input[type=date].hero-date{
+    margin-top:10px; background:rgba(255,255,255,0.55); border:none; border-radius:10px; padding:7px 10px;
+    font-family:'Inter'; font-size:12px; color:var(--ink);
+  }
+
+  .badgecard{ margin-top:16px; }
+  .quotecard{
+    background: linear-gradient(160deg, rgba(110,99,224,0.10), rgba(255,138,101,0.16));
+    text-align:center; padding:20px 22px;
+  }
+  .quote-flame{ font-size:22px; margin-bottom:6px; }
+  .quote-text{ font-family:'Inter'; font-weight:700; font-size:14.5px; color:var(--ink); line-height:1.4; }
+  .badgerow{
+    display:flex; gap:12px; flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px;
+    scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    cursor:grab;
+  }
+  .badgerow::-webkit-scrollbar{ display:none; }
+  .badgerow.dragging{ cursor:grabbing; scroll-snap-type:none; }
+  .badge{ flex:0 0 104px; scroll-snap-align:start; text-align:center; padding:10px 6px; border-radius:16px; background:rgba(29,29,31,0.03); cursor:pointer; transition:transform .1s ease; }
+  .badge:active{ transform:scale(0.96); }
+  .badge:focus-visible{ outline:2px solid var(--violet); outline-offset:2px; }
+  .badge.unlocked{ background:linear-gradient(160deg, rgba(110,99,224,0.10), rgba(255,138,101,0.14)); }
+  .badge-icon{
+    width:44px; height:44px; margin:0 auto 6px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:19px; background:rgba(29,29,31,0.08); color:rgba(29,29,31,0.35);
+  }
+  .badge.unlocked .badge-icon{ background:linear-gradient(160deg, var(--violet), var(--coral)); color:#fff; box-shadow:0 4px 12px rgba(255,138,101,0.35); }
+  .badge-name{ font-size:11px; font-weight:700; color:var(--ink); }
+  .badge-sub{ font-size:9.5px; color:var(--ink-faint); margin-top:2px; }
+  .badge.unlocked .badge-sub{ color:var(--coral); font-weight:600; }
+  .weekcard{ margin-top:16px; }
+  .weekgrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .weekday-card{
+    background:var(--glass-strong); border-radius:14px; padding:8px 3px 9px; box-shadow:var(--shadow);
+    text-align:center; cursor:pointer; transition:transform .1s ease;
+  }
+  .weekday-card:active{ transform:scale(0.96); }
+  .weekday-card:focus-visible{ outline:2px solid var(--violet); outline-offset:2px; }
+  .weekday-card.today{ outline:2px solid var(--coral); outline-offset:-2px; }
+  .weekday-name{ font-size:10px; font-weight:700; color:var(--ink-soft); }
+  .weekday-num{ font-size:13.5px; font-weight:700; color:var(--ink); margin:2px 0 7px; }
+  .weekday-dots{ display:flex; justify-content:center; gap:3px; flex-wrap:wrap; min-height:7px; }
+  .weekday-dots span{ width:6px; height:6px; border-radius:50%; display:inline-block; }
+  .weekday-empty{ width:6px; height:2px; border-radius:2px; background:rgba(29,29,31,0.12); display:inline-block; }
+  .weekday-card.selected{ background:rgba(110,99,224,0.10); }
+  .week-detail-date{ font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:12px 0 6px; }
+  .week-detail-row{
+    display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px; font-weight:500;
+  }
+  .week-detail-row:last-child{ border-bottom:none; }
+
+  /* Glass cards */
+  .card{
+    background: rgba(255,255,255,0.94);
+    border-radius:22px;
+    padding:18px 20px;
+    box-shadow:var(--shadow);
+    border:1px solid rgba(255,255,255,0.5);
+  }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  @media(max-width:600px){ .row2{ grid-template-columns:1fr; } }
+
+  .stat-num{ font-size:26px; font-weight:700; margin-top:6px; }
+  .gradbar{
+    margin-top:10px; height:6px; border-radius:4px; position:relative;
+    background:linear-gradient(90deg, var(--violet), var(--coral));
+  }
+  .gradbar .tick{ position:absolute; top:-3px; width:2px; height:12px; background:var(--ink); border-radius:2px; }
+
+  .catbar-track{ height:8px; border-radius:4px; background:rgba(29,29,31,0.08); overflow:hidden; }
+  .catbar-fill{ height:100%; background:linear-gradient(90deg, var(--violet), var(--coral)); border-radius:4px; }
+
+  .logcard{ margin-top:14px; }
+  .logcard h3{ margin:0 0 10px; font-size:14px; font-weight:700; }
+  .logrow{ display:flex; flex-wrap:wrap; gap:8px; }
+  select, input[type=text], input[type=number]{
+    font-family:'Inter'; font-weight:500; font-size:12.5px;
+    border:1px solid var(--line); border-radius:12px; padding:9px 12px; color:var(--ink); background:#fff;
+  }
+  select{ flex:1 1 130px; }
+  input[type=number]{ width:70px; }
+  input.topic{ flex:2 1 150px; }
+  .btn{
+    border:none; border-radius:999px; padding:10px 20px; font-family:'Inter'; font-weight:600; font-size:12.5px;
+    background:var(--ink); color:#fff; cursor:pointer; transition:opacity .15s ease;
+  }
+  .btn:hover{ opacity:0.85; }
+  .btn:focus-visible, select:focus-visible, input:focus-visible, .segbtn:focus-visible{
+    outline:2px solid var(--violet); outline-offset:2px;
+  }
+  .toast{ font-size:12px; color:var(--violet); font-weight:600; min-height:16px; margin-top:8px; }
+
+  /* Heatmap */
+  .heatcard{ margin-top:14px; }
+  .heat-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .heat-head h3{ margin:0; font-size:14px; font-weight:700; }
+  .legend{ display:flex; align-items:center; gap:4px; }
+  .legend .sq{ width:9px; height:9px; border-radius:2px; }
+  .month-nav{ display:flex; align-items:center; justify-content:center; gap:16px; margin:2px 0 12px; }
+  .month-nav-btn{ border:none; background:rgba(29,29,31,0.06); border-radius:50%; width:26px; height:26px; font-size:14px; line-height:1; color:var(--ink); cursor:pointer; }
+  .month-nav-btn:disabled{ opacity:0.25; cursor:default; }
+  .month-nav-label{ font-family:'Inter'; font-weight:700; font-size:13.5px; color:var(--ink); min-width:130px; text-align:center; }
+  .month-daylabels{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin:0 auto 6px; max-width:320px; }
+  .month-daylabels span{ text-align:center; font-size:9px; font-weight:700; color:var(--ink-faint); }
+  .month-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin:0 auto; max-width:320px; }
+  .month-grid .cell{ aspect-ratio:1; border-radius:6px; background:rgba(29,29,31,0.06); }
+
+  /* Segmented tabs */
+  .segwrap{ margin-top:18px; display:flex; background:rgba(29,29,31,0.06); border-radius:999px; padding:4px; max-width:520px; }
+  .segbtn{ flex:1; border:none; background:none; border-radius:999px; padding:9px 4px; font-family:'Inter'; font-weight:600; font-size:12px; color:var(--ink-soft); cursor:pointer; }
+  .segbtn.active{ background:#fff; color:var(--ink); box-shadow:0 2px 6px rgba(29,29,31,0.12); }
+  .panel{ display:none; margin-top:12px; }
+  .panel.active{ display:block; animation:pop .2s ease; }
+  @keyframes pop{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  ul.plain{ list-style:none; margin:0; padding:0; }
+  ul.plain li{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:12.5px; font-weight:500; }
+  ul.plain li:last-child{ border-bottom:none; }
+  ul.plain input[type=checkbox]{ accent-color:var(--coral); width:13px; height:13px; }
+
+  .sched-group{ margin-top:10px; }
+  .sched-group:first-child{ margin-top:0; }
+  .sched-group-header{
+    width:100%; display:flex; justify-content:space-between; align-items:center;
+    background:rgba(29,29,31,0.045); border:none; border-radius:12px; padding:10px 12px;
+    font-family:'Inter'; font-weight:700; font-size:12.5px; color:var(--ink); cursor:pointer;
+  }
+  .sched-group-meta{ display:flex; align-items:center; gap:8px; color:var(--ink-soft); font-weight:600; }
+  .chev{ display:inline-block; transition:transform .15s ease; font-size:13px; }
+  .chev.open{ transform:rotate(90deg); }
+  .sched-group-body{ padding:0 2px; }
+  .letter textarea{
+    width:100%; min-height:100px; border:1px solid var(--line); border-radius:14px; padding:12px 14px;
+    font-family:'Inter'; font-size:13.5px; color:var(--ink); resize:vertical; background:#fff;
+  }
+
+  footer{ text-align:center; font-size:11px; color:var(--ink-faint); padding:28px 0 8px; }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <div>
+      <div class="hi" id="heroHi">Hello, Architect Ella</div>
+      <div class="manifest mono">Top 1 · LEA 2027</div>
+      <div class="date" id="heroDate">—</div>
+      <div class="mono" id="syncStatus" style="margin-top:6px; display:inline-flex; align-items:center; gap:5px; text-transform:none; letter-spacing:0; font-weight:600; color:rgba(29,29,31,0.55);"></div>
+    </div>
+    <svg class="flower" id="flowerSvg" viewBox="0 0 100 100"></svg>
+  </div>
+  <div class="hero-main">
+    <div class="label">Days to LEA 2027</div>
+    <div class="big"><span id="daysLeft">—</span><span class="unit">days</span></div>
+    <div class="sub" id="examDateLabel">set your exam date</div>
+    <input type="date" class="hero-date" id="examDate">
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="card quotecard">
+    <div class="quote-flame">🔥</div>
+    <div class="quote-text" id="dailyQuoteText">Loading…</div>
+    <div class="mono" style="margin-top:8px;">Today's fuel · refreshes daily</div>
+  </div>
+
+  <div class="card badgecard">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div class="mono">Milestones</div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button class="month-nav-btn" id="badgePrev" type="button" aria-label="Scroll milestones left">‹</button>
+        <button class="month-nav-btn" id="badgeNext" type="button" aria-label="Scroll milestones right">›</button>
+      </div>
+    </div>
+    <div class="badgerow" id="badgeRow"></div>
+    <div class="toast" id="badgeToastText" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="card weekcard">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <div class="mono" id="weekRangeLabel">This week</div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button class="month-nav-btn" id="weekPrev" type="button" aria-label="Previous week">‹</button>
+        <button class="month-nav-btn" id="weekNext" type="button" aria-label="Next week">›</button>
+      </div>
+    </div>
+    <div class="weekgrid" id="weekGrid"></div>
+    <div id="weekDayDetail"></div>
+  </div>
+
+  <div class="row2">
+    <div class="card">
+      <div class="mono">Current streak</div>
+      <div class="stat-num" id="statCurrentStreak">0<span style="font-size:13px; font-weight:500; color:var(--ink-soft);"> days</span></div>
+      <div class="gradbar"><div class="tick" id="tickCurrent" style="left:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="mono">Total hours</div>
+      <div class="stat-num" id="statTotalHours">0<span style="font-size:13px; font-weight:500; color:var(--ink-soft);"> hrs</span></div>
+      <div class="gradbar"><div class="tick" id="tickHours" style="left:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="card logcard">
+    <h3>Log a session</h3>
+    <div class="logrow">
+      <select id="logSubject">
+        <option>Lecture</option>
+        <option>Deep Study</option>
+        <option>Mock Tests</option>
+        <option>Flashcards</option>
+      </select>
+      <input type="number" id="logHours" placeholder="hrs" min="0" step="0.5">
+      <input type="text" class="topic" id="logTopic" placeholder="topic covered">
+      <button class="btn" id="logBtn">Add</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="card heatcard">
+    <div class="heat-head">
+      <h3>Study activity</h3>
+      <div class="legend">
+        <span class="mono" id="heatmapTotal" style="margin-right:6px;">0h</span>
+        <span class="sq" style="background:rgba(29,29,31,0.06)"></span>
+        <span class="sq" style="background:#F4C7B0"></span>
+        <span class="sq" style="background:#F0987A"></span>
+        <span class="sq" style="background:var(--coral)"></span>
+      </div>
+    </div>
+    <div class="month-nav">
+      <button class="month-nav-btn" id="heatmapPrev" type="button" aria-label="Previous month">‹</button>
+      <span class="month-nav-label" id="heatmapMonthLabel">—</span>
+      <button class="month-nav-btn" id="heatmapNext" type="button" aria-label="Next month">›</button>
+    </div>
+    <div class="month-daylabels">
+      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+    </div>
+    <div class="month-grid" id="heatmapGrid"></div>
+  </div>
+
+  <div class="segwrap" role="tablist">
+    <button class="segbtn active" data-tab="schedule">Schedule</button>
+    <button class="segbtn" data-tab="mocks">Mocks</button>
+    <button class="segbtn" data-tab="reading">Reading</button>
+    <button class="segbtn" data-tab="letter">Note</button>
+  </div>
+
+  <div class="panel active" id="panel-schedule">
+    <div class="card">
+      <div class="mono" style="margin-bottom:10px;">Review centers</div>
+      <div class="logrow" id="centerNames" style="margin-bottom:14px;"></div>
+
+      <div class="mono" style="margin-bottom:10px;">Add a schedule item</div>
+      <div class="logrow" style="margin-bottom:12px;">
+        <select id="scheduleCenter"></select>
+        <input type="date" id="scheduleDate" style="flex:1 1 130px;">
+        <input type="text" class="topic" id="scheduleLabel" placeholder="e.g. Mock exam, Refresher — Structural">
+        <button class="btn" id="scheduleBtn">Add</button>
+      </div>
+
+      <div class="logrow" style="margin-bottom:10px; align-items:center;">
+        <select id="scheduleFilter" style="flex:1 1 130px;"><option value="__all__">All centers</option></select>
+        <label style="display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; color:var(--ink-soft);">
+          <input type="checkbox" id="scheduleUpcomingOnly" checked> Upcoming only
+        </label>
+        <span class="mono" id="scheduleCount" style="text-transform:none; letter-spacing:0;"></span>
+      </div>
+      <div id="scheduleList"><p style="font-size:12.5px; color:var(--ink-soft);">No schedule items yet — add one above, or send me your review centers' calendars and I'll fill this in.</p></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-mocks">
+    <div class="card">
+      <div class="mono" style="margin-bottom:10px;">Record a mock</div>
+      <div class="logrow" style="margin-bottom:8px;">
+        <select id="mockCategory" style="flex:1 1 130px;"></select>
+        <button class="btn" id="addCategoryBtn" type="button" style="padding:9px 12px; font-size:11px; background:rgba(29,29,31,0.08); color:var(--ink);">+ Category</button>
+        <button class="btn" id="manageCategoriesBtn" type="button" style="padding:9px 12px; font-size:11px; background:rgba(29,29,31,0.08); color:var(--ink);">Manage</button>
+      </div>
+      <div class="logrow" id="newCategoryRow" style="margin-bottom:8px; display:none;">
+        <input type="text" id="newCategoryInput" placeholder="new category name" style="flex:1 1 130px;">
+        <button class="btn" id="confirmCategoryBtn" type="button" style="padding:9px 12px; font-size:11px;">Add</button>
+        <button class="btn" id="cancelCategoryBtn" type="button" style="padding:9px 12px; font-size:11px; background:rgba(29,29,31,0.08); color:var(--ink);">Cancel</button>
+      </div>
+      <div id="categoryManageList" style="display:none; margin-bottom:10px;"></div>
+      <div class="logrow" style="margin-bottom:10px; align-items:center;">
+        <input type="text" id="mockName" placeholder="test name (optional)" style="flex:2 1 120px;">
+        <input type="number" id="mockScoreGot" placeholder="score" style="width:64px;">
+        <span style="color:var(--ink-soft); font-weight:600;">/</span>
+        <input type="number" id="mockScoreTotal" placeholder="total" style="width:64px;">
+        <span class="mono" id="mockPctPreview" style="text-transform:none; letter-spacing:0;">—</span>
+        <button class="btn" id="mockBtn">Save</button>
+      </div>
+      <div class="toast" id="mockToast"></div>
+      <ul class="plain" id="mockHistory"><li>No mocks yet.</li></ul>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="mono" style="margin-bottom:10px;">Category performance</div>
+      <div id="mockStats"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-reading">
+    <div class="card">
+      <div class="mono" style="margin-bottom:10px;">Log pages</div>
+      <div class="logrow" style="margin-bottom:10px;">
+        <select id="bookSelect" style="flex:1 1 160px;"></select>
+        <input type="number" id="bookPages" placeholder="pages read" style="width:90px;">
+        <input type="number" id="bookHours" placeholder="hrs" step="0.5" style="width:70px;">
+        <button class="btn" id="bookBtn">Log</button>
+      </div>
+      <div class="toast" id="bookToast"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="mono" style="margin-bottom:10px;">Add a custom book</div>
+      <div class="logrow">
+        <input type="text" id="newBookInput" placeholder="book title" style="flex:1 1 140px;">
+        <select id="newBookCategory" style="flex:1 1 130px;"></select>
+        <button class="btn" id="addBookCategoryBtn" type="button" style="padding:9px 12px; font-size:11px; background:rgba(29,29,31,0.08); color:var(--ink);">+ Category</button>
+        <button class="btn" id="confirmBookBtn" type="button">Add</button>
+      </div>
+      <div class="logrow" id="newBookCategoryRow" style="display:none; margin-top:8px;">
+        <input type="text" id="newBookCategoryInput" placeholder="new category name" style="flex:1 1 140px;">
+        <button class="btn" id="confirmBookCategoryBtn" type="button" style="padding:9px 12px; font-size:11px;">Add</button>
+        <button class="btn" id="cancelBookCategoryBtn" type="button" style="padding:9px 12px; font-size:11px; background:rgba(29,29,31,0.08); color:var(--ink);">Cancel</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="mono" style="margin-bottom:10px;">Books by category</div>
+      <div id="bookGroups"><p style="font-size:12.5px; color:var(--ink-soft);">No books yet.</p></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-letter">
+    <div class="card letter">
+      <div class="mono" style="margin-bottom:10px;">For the days it feels far away</div>
+      <textarea id="letterText" placeholder="Dear future Ar. Pelarion, on exam day I want you to remember…"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<footer>made for Ella · keep going, future Ar. Pelarion</footer>
+
+<script>
+const STORE_KEY = 'lea2027_apple_v1';
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || def(); } catch(e){ return def(); } }
+function def(){ return { examDate:'', sessions:[], mocks:[], books:[], letter:'', lastLogDate:'', streak:0, bestStreak:0, centers:['Review Center 1','Review Center 2','Review Center 3'], schedule:[], mockCategories:['Theory','History','Design'] }; }
+let state = load();
+let saveDebounceTimer = null;
+function save(){
+  state._updatedAt = Date.now();
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  setSyncStatus('syncing');
+  clearTimeout(saveDebounceTimer);
+  saveDebounceTimer = setTimeout(()=>{ fbSave(state); }, 900);
+}
+function todayStr(){ return new Date().toDateString(); }
+
+// --- Firebase sync (cross-device) — lightweight REST calls, no SDK download ---
+const FIREBASE_API_KEY = 'AIzaSyD9w_q-NwTAkMPb2oZiO4_mz2b6-Wkc7Kg';
+const FIREBASE_DB_URL = 'https://toponelea2027-default-rtdb.asia-southeast1.firebasedatabase.app';
+const FIREBASE_DATA_PATH = '/ella/leaTracker';
+const FB_AUTH_CACHE_KEY = 'lea2027_fbauth_v1';
+
+function setSyncStatus(status){
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  const map = {
+    synced: {text:'Synced', color:'#5FB89C'},
+    syncing: {text:'Syncing…', color:'#F2A65A'},
+    offline: {text:'Offline — saved locally', color:'#9AA0A6'}
+  };
+  const s = map[status] || map.offline;
+  el.innerHTML = `<span style="width:6px; height:6px; border-radius:50%; background:${s.color}; display:inline-block;"></span> ${s.text}`;
+}
+
+async function fbEnsureAuth(){
+  let cached = null;
+  try{ cached = JSON.parse(localStorage.getItem(FB_AUTH_CACHE_KEY) || 'null'); }catch(e){}
+  if(cached && cached.expiresAt > Date.now() + 60000){
+    return cached.idToken;
+  }
+  if(cached && cached.refreshToken){
+    try{
+      const res = await fetch(`https://securetoken.googleapis.com/v1/token?key=${FIREBASE_API_KEY}`, {
+        method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:`grant_type=refresh_token&refresh_token=${cached.refreshToken}`
+      });
+      const data = await res.json();
+      if(data.id_token){
+        const record = {idToken:data.id_token, refreshToken:data.refresh_token, expiresAt:Date.now()+Number(data.expires_in)*1000};
+        localStorage.setItem(FB_AUTH_CACHE_KEY, JSON.stringify(record));
+        return record.idToken;
+      }
+    }catch(e){ /* fall through to fresh sign-in */ }
+  }
+  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({returnSecureToken:true})
+  });
+  const data = await res.json();
+  if(!data.idToken) throw new Error('Firebase anonymous sign-in failed');
+  const record = {idToken:data.idToken, refreshToken:data.refreshToken, expiresAt:Date.now()+Number(data.expiresIn)*1000};
+  localStorage.setItem(FB_AUTH_CACHE_KEY, JSON.stringify(record));
+  return record.idToken;
+}
+async function fbLoad(){
+  try{
+    const token = await fbEnsureAuth();
+    const res = await fetch(`${FIREBASE_DB_URL}${FIREBASE_DATA_PATH}.json?auth=${token}`);
+    if(!res.ok) throw new Error('Firebase read failed: ' + res.status);
+    return await res.json();
+  }catch(e){
+    console.warn('Firebase load failed, using local data.', e);
+    setSyncStatus('offline');
+    return null;
+  }
+}
+async function fbSave(stateToSave){
+  try{
+    const token = await fbEnsureAuth();
+    const res = await fetch(`${FIREBASE_DB_URL}${FIREBASE_DATA_PATH}.json?auth=${token}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(stateToSave)
+    });
+    if(!res.ok) throw new Error('Firebase write failed: ' + res.status);
+    setSyncStatus('synced');
+  }catch(e){
+    console.warn('Firebase save failed — will retry on next change.', e);
+    setSyncStatus('offline');
+  }
+}
+async function initFirebaseSync(){
+  setSyncStatus('syncing');
+  const remote = await fbLoad();
+  if(remote && (!state._updatedAt || (remote._updatedAt||0) > state._updatedAt)){
+    state = remote;
+    // re-run seeders in case the remote copy predates a feature — all are idempotent/flagged
+    ensureDefaultBooks(); ensureBookCategoryMigration(); ensureScheduleIds();
+    ensureToplabSchedule(); ensureMstSchedule(); ensurePadillaSchedule();
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    renderAll();
+    setSyncStatus('synced');
+  } else {
+    fbSave(state); // local is current — push it up (covers first-run / stale-remote cases)
+  }
+}
+
+// gradual readings list — from Ella's review center reading plan
+const DEFAULT_BOOKS = [
+  {t:'A Visual Dictionary of Architecture', c:'D.K. Ching'},
+  {t:'Building Construction Illustrated', c:'D.K. Ching'},
+  {t:'Form, Space, & Order', c:'D.K. Ching'},
+  {t:'Simplified Construction Estimate', c:'Max Fajardo'},
+  {t:'Planning and Designers Handbook', c:'Max Fajardo'},
+  {t:'Plumbing Design and Estimate', c:'Max Fajardo'},
+  {t:'Electrical Layout and Estimate', c:'Max Fajardo'},
+  {t:'Simplified Methods in Building Construction', c:'Max Fajardo'},
+  {t:'Construction Management', c:'Max Fajardo'},
+  {t:'Specification and Contract', c:'Max Fajardo'},
+  {t:'Utilities 1: Plumbing and Sanitary', c:'George Salvan'},
+  {t:'Utilities 2: Electrical and Mechanical Equipment', c:'George Salvan'},
+  {t:'Utilities 3: Lighting and Acoustics', c:'George Salvan'},
+  {t:'Architectural Building Materials', c:'Architecture & Practice'},
+  {t:'Architectural Character and the History of Architecture', c:'Architecture & Practice'},
+  {t:'Architectural Practice and Construction Management', c:'Architecture & Practice'},
+  {t:'Architectural Theories of Design', c:'Architecture & Practice'},
+  {t:'Licensure Examination for Architects Reviewer', c:'Architecture & Practice'},
+  {t:'Imhotep 2018 Tabulated Reviewer', c:'Architecture & Practice'},
+  {t:'P.D. 1096: National Building Code', c:'Codes & Laws'},
+  {t:'National Building Code — Rule 7', c:'Codes & Laws'},
+  {t:'National Building Code — Rule 8', c:'Codes & Laws'},
+  {t:'R.A. 9514: Fire Code of the Philippines', c:'Codes & Laws'},
+  {t:'B.P. 344: Accessibility Law', c:'Codes & Laws'},
+  {t:'B.P. 220: Economic and Socialized Housing', c:'Codes & Laws'},
+  {t:'P.D. 957: Subdivision and Condominium Law', c:'Codes & Laws'},
+  {t:'Philippine Green Building Code', c:'Codes & Laws'},
+  {t:'R.A. 9266: The Architecture Act of 2004', c:'Codes & Laws'},
+  {t:'Standards of Professional Practice (SPP)', c:'Codes & Laws'},
+  {t:'R.A. 545: Regulation of the Practice of Architecture', c:'Codes & Laws'},
+  {t:"Architects' Code of Ethics", c:'Codes & Laws'},
+  {t:'R.A. 4726: The Condominium Act', c:'Codes & Laws'},
+  {t:'R.A. 7279: Urban Development and Housing Act', c:'Codes & Laws'}
+];
+const BOOK_CATEGORIES = ['D.K. Ching','Max Fajardo','George Salvan','Architecture & Practice','Codes & Laws'];
+function ensureDefaultBooks(){
+  const existingTitles = new Set(state.books.map(b=>b.title));
+  let added = false;
+  DEFAULT_BOOKS.forEach(item=>{
+    if(!existingTitles.has(item.t)){ state.books.push({title:item.t, category:item.c, pages:0, reads:[false,false,false]}); added = true; }
+  });
+  if(!state.bookCategories) state.bookCategories = BOOK_CATEGORIES.slice();
+  if(added) save();
+}
+ensureDefaultBooks();
+
+function ensureBookCategoryMigration(){
+  let changed = false;
+  const lookup = {};
+  DEFAULT_BOOKS.forEach(item=>{ lookup[item.t] = item.c; });
+  state.books.forEach(b=>{
+    if(!b.category){ b.category = lookup[b.title] || 'Custom'; changed = true; }
+  });
+  if(!state.bookCategories){ state.bookCategories = BOOK_CATEGORIES.slice(); changed = true; }
+  if(changed) save();
+}
+ensureBookCategoryMigration();
+
+
+// TopLab review center schedule (Jan 2027 board exam, Full Online)
+const TOPLAB_ITEMS = [
+  {d:'2026-07-25', l:'General Assembly and Introduction — 3:00–5:00 PM · 2h'},
+  {d:'2026-07-25', l:'Review Guidelines and Logbook Filing — 6:00–8:30 PM · 2.5h'},
+  {d:'2026-08-01', l:'Theory of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-02', l:'Theory of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-03', l:'Theory of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-05', l:'Theory of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-07', l:'Theory of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-08', l:'Theory of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-09', l:'Theory of Architecture — 9:00 AM–2:00 PM · 4h'},
+  {d:'2026-08-09', l:'PREBOARD EXAM: Theory of Architecture — 2:00–6:00 PM · 4h'},
+  {d:'2026-08-10', l:'History of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-12', l:'History of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-14', l:'History of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-15', l:'History of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-16', l:'History of Architecture — 9:00 AM–6:00 PM · 8h'},
+  {d:'2026-08-17', l:'History of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-19', l:'History of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-21', l:'PREBOARD EXAM: History of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-22', l:'Building Laws — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-23', l:'Building Laws — 9:00 AM–6:00 PM · 8h'},
+  {d:'2026-08-24', l:'Building Laws — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-26', l:'Building Laws — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-28', l:'PREBOARD EXAM: Building Laws — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-29', l:'Professional Practice — 6:00–10:00 PM · 4h'},
+  {d:'2026-08-30', l:'Professional Practice — 9:00 AM–6:00 PM · 8h'},
+  {d:'2026-08-31', l:'Professional Practice — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-02', l:'Professional Practice — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-04', l:'Professional Practice — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-05', l:'PREBOARD EXAM: Prof. Practice — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-06', l:'Building Technology — Materials — 9:00 AM–6:00 PM · 8h'},
+  {d:'2026-09-07', l:'Building Technology — Materials — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-09', l:'Building Technology — Materials — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-11', l:'Building Technology — Materials — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-12', l:'Building Technology — Materials — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-13', l:'Building Technology — Materials — 9:00 AM–6:00 PM · 8h'},
+  {d:'2026-09-14', l:'PREBOARD EXAM: Building Technology — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-16', l:'Building Utilities — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-18', l:'Building Utilities — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-19', l:'Building Utilities — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-20', l:'Building Utilities — 9:00 AM–6:00 PM · 8h'},
+  {d:'2026-09-21', l:'Building Utilities — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-23', l:'Building Utilities — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-25', l:'Building Utilities — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-26', l:'PREBOARD: Building Utilities — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-27', l:'Intro to Structural Conceptualization — 9:00 AM–2:00 PM · 4h'},
+  {d:'2026-09-27', l:'Structural Conceptualization — 2:00–6:00 PM · 4h'},
+  {d:'2026-09-28', l:'Structural Conceptualization — 6:00–10:00 PM · 4h'},
+  {d:'2026-09-30', l:'Structural Conceptualization — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-02', l:'PREBOARD: Structural Conceptualization — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-03', l:'Residential Part 1 — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-04', l:'Residential Part 2 — 9:00 AM–2:00 PM · 4h'},
+  {d:'2026-10-04', l:'Commercial — 2:00–6:00 PM · 4h'},
+  {d:'2026-10-07', l:'Public Spaces and Recreational Design — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-09', l:'Institutional — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-10', l:'Industrial and Agricultural — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-11', l:'Complex Projects and Facilities — 9:00 AM–2:00 PM · 4h'},
+  {d:'2026-10-11', l:'PREBOARD EXAM: Architectural Design and Site Planning — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-12', l:'Special Memorization Course (Full Package only) — 6:00–8:00 PM · 2h'},
+  {d:'2026-10-19', l:'Fundamentals of Rule 7 and 8 — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-21', l:'Fundamentals of Rule 7 and 8 — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-23', l:'Lot Plotting — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-24', l:'Lot Plotting — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-26', l:'MID: Focused Design — Residential Part 1 — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-28', l:'MID: Focused Design — Residential Part 2 — 6:00–10:00 PM · 4h'},
+  {d:'2026-10-30', l:'MID: Focused Design — Residential Part 3 — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-02', l:'MID: Focused Design — Commercial — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-04', l:'MID: Focused Design — Commercial — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-06', l:'MID: Focused Design — Complex Projects Part 1 — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-09', l:'MID: Focused Design — Complex Projects Part 2 — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-11', l:'MID: Focused Design — Institutional — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-13', l:'MID: Focused Design — Institutional — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-16', l:'MID: Focused Design — Industrial and Agricultural — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-18', l:'MID: Focused Design — Industrial and Agricultural — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-20', l:'Refresher: Building Laws — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-23', l:'Refresher: Professional Practice — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-25', l:'Architectural Design — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-27', l:'Architectural Design — 6:00–10:00 PM · 4h'},
+  {d:'2026-11-30', l:'Refresher: History of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-02', l:'Refresher: History of Architecture — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-04', l:'Refresher: Theory of Architecture and Principles of Planning — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-07', l:'Refresher: Theory of Architecture and Principles of Planning — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-09', l:'Refresher: Building Technology — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-11', l:'Refresher: Building Technology — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-14', l:'Refresher: Building Utilities — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-16', l:'Refresher: Building Utilities — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-18', l:'Refresher: Structural Conceptualization — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-21', l:'Refresher: Structural Conceptualization — 6:00–10:00 PM · 4h'},
+  {d:'2026-12-22', l:'Christmas Break begins (through Jan 9, 2027)'},
+  {d:'2027-01-10', l:'Mock Board Exam: Whole Day — 8:00 AM–3:00 PM · 6h'},
+  {d:'2027-01-10', l:'Coaching — 4:00–8:00 PM · 4h'},
+  {d:'2027-01-13', l:'Releasing of Mockboard Exams'}
+];
+function ensureToplabSchedule(){
+  if(state.toplabSeeded) return;
+  if(state.centers[0] === 'Review Center 1') state.centers[0] = 'TopLab';
+  TOPLAB_ITEMS.forEach((item,idx)=>{
+    state.schedule.push({id:'toplab-'+idx, center:'TopLab', date:item.d, label:item.l, attended:false});
+  });
+  state.schedule.sort((a,b)=> new Date(a.date) - new Date(b.date));
+  state.toplabSeeded = true;
+  save();
+}
+ensureToplabSchedule();
+
+function ensureScheduleIds(){
+  let changed = false;
+  state.schedule.forEach((s,i)=>{
+    if(!s.id){ s.id = 'sched-'+i+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); changed = true; }
+    if(typeof s.attended === 'undefined'){ s.attended = false; changed = true; }
+  });
+  if(changed) save();
+}
+ensureScheduleIds();
+
+// MST Connect review center schedule (LEA Jan 2027 Comprehensive Review, M–F 6–9PM live via Zoom)
+function weekdayDates(startISO){
+  const d = new Date(startISO+'T00:00:00');
+  const dates = [];
+  for(let i=0;i<5;i++){
+    const nd = new Date(d);
+    nd.setDate(d.getDate()+i);
+    dates.push(nd.toISOString().slice(0,10));
+  }
+  return dates;
+}
+const MST_WEEKS = [
+  {start:'2026-08-03', topic:'Building Technology 1', sub:'Reinforced Concrete & Masonry; Structural Steel, Carpentry, Sheet Metal & Tinsmithry; Glass & Glazing, Fenestration, Hardware'},
+  {start:'2026-08-10', topic:'Building Technology 2', sub:'Painting, Waterproofing, Dampproofing, Insulation; Civil Works, Earthworks; Construction Tools and Equipment'},
+  {start:'2026-08-17', topic:'History of Architecture 1', sub:'Prehistoric & Egyptian; West Asiatic & Etruscan; Greek & Roman; Early Christian, Byzantine, Islamic; Romanesque, Gothic'},
+  {start:'2026-08-24', topic:'History of Architecture 2', sub:'Renaissance; American & European; Asian (Chinese, Japanese, Korean); Philippine; New Zealand, Australia & the rest'},
+  {start:'2026-08-31', topic:'Building Laws', sub:'BP 344 Accessibility Law; RA 9514 Fire Code; BP 220 & PD 957 Housing Laws; Philippine Green Building Code'},
+  {start:'2026-09-07', topic:'Building Utilities 1', sub:'Plumbing Systems & Equipment; Electrical & other Power Systems; Acoustics & Illumination'},
+  {start:'2026-09-14', topic:'Building Utilities 2', sub:'Mechanical Systems; Fire Protection & Disaster Prevention, Security Systems; Communications & High-Tech Systems'},
+  {start:'2026-09-21', topic:'Professional Practice', sub:'RA 9266 Architecture Law of 2004; Standards of Professional Practice; Methods of Compensation'},
+  {start:'2026-09-28', topic:'Theory & Principles of Planning 1', sub:'Principles & Elements of Design; Anthropometry, Ergonomics, Proxemics, Territoriality; Masters of Architecture'},
+  {start:'2026-10-05', topic:'Theory & Principles of Planning 2', sub:'Urban & Regional Planning, Housing & Human Settlements; Site Analysis & Development Planning; Tropical Architecture'},
+  {start:'2026-10-12', topic:'Structural Conceptualization', sub:'Force Systems, Strength of Materials; Theory of Structures, Seismic & Bracing Systems; NSCP 2015 & its influence in design'},
+  {start:'2026-10-19', topic:'Architectural Design', sub:'General Design & Space Planning; NBCP Rules other than 7&8'}
+];
+function ensureMstSchedule(){
+  if(state.mstSeeded) return;
+  if(state.centers[1] === 'Review Center 2') state.centers[1] = 'MST';
+  MST_WEEKS.forEach((w,wi)=>{
+    const dates = weekdayDates(w.start);
+    dates.forEach((date,di)=>{
+      const label = di===0
+        ? `Week ${wi+1}: ${w.topic} — Live training · 6–9PM · 3h (${w.sub})`
+        : `Week ${wi+1}: ${w.topic} — Live training · 6–9PM · 3h`;
+      state.schedule.push({id:'mst-'+wi+'-'+di, center:'MST', date, label, attended:false});
+    });
+  });
+  state.schedule.sort((a,b)=> new Date(a.date) - new Date(b.date));
+  state.mstSeeded = true;
+  save();
+}
+ensureMstSchedule();
+
+// Padilla review center — refresher class, recurring weekly pattern (no exact modules yet)
+function ensurePadillaSchedule(){
+  if(state.padillaSeeded) return;
+  if(state.centers[2] === 'Review Center 3') state.centers[2] = 'Padilla';
+  const start = new Date('2026-09-01T00:00:00');
+  const end = new Date('2026-12-21T00:00:00'); // tentative — matches other centers' pre-Christmas cutoff
+  let d = new Date(start);
+  let n = 0;
+  while(d <= end){
+    const day = d.getDay(); // 0 Sun ... 6 Sat
+    const iso = d.toISOString().slice(0,10);
+    if(day === 2 || day === 4){
+      state.schedule.push({id:'padilla-'+n, center:'Padilla', date:iso, label:'Refresher Class (tentative — modules TBA) — 7:00–10:30 PM · 3.5h', attended:false});
+      n++;
+    } else if(day === 6){
+      state.schedule.push({id:'padilla-'+n, center:'Padilla', date:iso, label:'Refresher Class (tentative — modules TBA) — 8:00 AM–12:00 PM · 4h', attended:false});
+      n++;
+    }
+    d.setDate(d.getDate()+1);
+  }
+  state.schedule.sort((a,b)=> new Date(a.date) - new Date(b.date));
+  state.padillaSeeded = true;
+  save();
+}
+ensurePadillaSchedule();
+
+function parseHoursFromLabel(label){
+  const m = label.match(/([\d.]+)\s*h\b/i);
+  return m ? Number(m[1]) : 0;
+}
+function toggleScheduleAttendance(id, checked){
+  const item = state.schedule.find(s=>s.id===id);
+  if(!item) return;
+  const sessionId = 'sess-'+id;
+  if(checked){
+    if(!state.sessions.some(se=>se.id===sessionId)){
+      const hrs = parseHoursFromLabel(item.label);
+      const dateObj = new Date(item.date);
+      const dateStr = isNaN(dateObj) ? todayStr() : dateObj.toDateString();
+      registerStudyActivity(dateStr);
+      state.sessions.unshift({
+        id: sessionId,
+        subject: 'Lecture',
+        hours: hrs,
+        topic: item.label,
+        date: dateStr
+      });
+    }
+    item.attended = true;
+  } else {
+    state.sessions = state.sessions.filter(se=>se.id !== sessionId);
+    item.attended = false;
+  }
+  save();
+  renderAll();
+}
+
+// flower — line-art, no face; bloom amount reflects today's hours
+function flowerSVG(bloomPct){
+  const petalOpacity = 0.35 + bloomPct*0.65;
+  const petal = (angle)=>`<ellipse cx="50" cy="30" rx="11" ry="17" fill="none" stroke="#1D1D1F" stroke-width="1.3" opacity="${petalOpacity}" transform="rotate(${angle} 50 50)"/>`;
+  return `${petal(0)}${petal(72)}${petal(144)}${petal(216)}${petal(288)}<circle cx="50" cy="50" r="6" fill="#FF8A65" opacity="${0.5+bloomPct*0.5}"/>`;
+}
+// daily motivational quote — deterministic by calendar day, refreshes tomorrow
+const DAILY_QUOTES = [
+  "Top 1 isn't luck. It's the hour nobody sees you put in.",
+  "Every course you lay today is a floor future Architect Ella gets to stand on.",
+  "You don't rise to the level of your goals. You fall to the level of your review.",
+  "The board doesn't ask if you're tired. Show up anyway.",
+  "375 hours isn't a number. It's a promise you're keeping to yourself.",
+  "Discipline is the bridge between manifesting and becoming.",
+  "Somewhere, another reviewee just opened their notes. Match them.",
+  "You're not behind. You're building. Keep laying courses.",
+  "The exam is in January. Your habits are being built in August.",
+  "Nobody remembers the days you rested. Everyone remembers the score.",
+  "Small hours, repeated daily, outbuild one heroic all-nighter.",
+  "Nail the fundamentals today so October's design problems feel easy.",
+  "Nine months from now, you'll thank today's version of you.",
+  "You said Top 1. Prove it in the quiet hours nobody's watching.",
+  "Consistency is the loudest flex. Let your streak speak.",
+  "Every subject you review is one less thing standing between you and the license.",
+  "The fire doesn't need to roar. It just needs to not go out.",
+  "Architect Ella isn't a title you'll earn in January. You're building her now.",
+  "Review centers give you the material. Only you can give it the hours.",
+  "Don't wait to feel ready. Studying is what makes you ready.",
+  "One mock exam won't define you. Showing up for all of them will.",
+  "You've survived every hard study day so far. This one's no different.",
+  "The version of you who passes Top 1 is studying right now. Be her.",
+  "Small wins compound. Log the session, even a short one.",
+  "The board doesn't care about excuses. Neither should you today.",
+  "You don't need motivation every day — you need the habit that survives without it.",
+  "Every checkbox you tick today is a brick in a licensed career.",
+  "Progress isn't glamorous. It's just today's hour, done anyway.",
+  "Stay hungry. Stay burning. Stay building.",
+  "The goal isn't to pass. The goal is to be undeniable."
+];
+function renderDailyQuote(){
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / 86400000);
+  const quote = DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length];
+  document.getElementById('dailyQuoteText').textContent = quote;
+}
+
+function renderHero(){
+  const today = todayStr();
+  const hrsToday = state.sessions.filter(s=>s.date===today).reduce((s,x)=>s+Number(x.hours),0);
+  document.getElementById('flowerSvg').innerHTML = flowerSVG(Math.min(1, hrsToday/4));
+  const now = new Date();
+  document.getElementById('heroDate').textContent = now.toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric'});
+}
+
+// countdown
+const examInput = document.getElementById('examDate');
+examInput.value = state.examDate;
+function renderCountdown(){
+  if(document.activeElement !== examInput) examInput.value = state.examDate; // keep in sync with merged/remote state, but don't fight the user mid-edit
+  const daysEl = document.getElementById('daysLeft');
+  const labelEl = document.getElementById('examDateLabel');
+  if(!state.examDate){ daysEl.textContent='—'; labelEl.textContent='set your exam date below'; return; }
+  const diff = Math.ceil((new Date(state.examDate) - new Date(new Date().toDateString())) / 86400000);
+  daysEl.textContent = diff >= 0 ? diff : 0;
+  const d = new Date(state.examDate);
+  labelEl.textContent = 'LEA 2027 · ' + d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+examInput.addEventListener('change', ()=>{ state.examDate = examInput.value; save(); renderCountdown(); });
+
+// day pills — this week, Sun to Sat
+function shortScheduleLabel(label){
+  // strip trailing parenthetical sub-topic detail for a cleaner one-line read
+  return label.replace(/\s*\([^)]*\)\s*$/, '');
+}
+function getScheduleDateBounds(){
+  if(!state.schedule.length) return null;
+  let min = state.schedule[0].date, max = state.schedule[0].date;
+  state.schedule.forEach(s=>{ if(s.date < min) min = s.date; if(s.date > max) max = s.date; });
+  return {min, max};
+}
+function sundayOf(dateObj){
+  const d = new Date(dateObj); d.setDate(d.getDate() - d.getDay());
+  return d;
+}
+let selectedWeekDayISO = null;
+let weekOffset = 0;
+function clampWeekOffset(){
+  const bounds = getScheduleDateBounds();
+  if(!bounds){ weekOffset = 0; return; }
+  const today = new Date(new Date().toDateString());
+  const currentSunday = sundayOf(today);
+  const minSunday = sundayOf(new Date(bounds.min+'T00:00:00'));
+  const maxSunday = sundayOf(new Date(bounds.max+'T00:00:00'));
+  const minOffset = Math.round((minSunday - currentSunday) / (7*86400000));
+  const maxOffset = Math.round((maxSunday - currentSunday) / (7*86400000));
+  if(weekOffset < minOffset) weekOffset = minOffset;
+  if(weekOffset > maxOffset) weekOffset = maxOffset;
+}
+document.getElementById('weekPrev').addEventListener('click', ()=>{
+  weekOffset -= 1; clampWeekOffset(); renderDayPills();
+});
+document.getElementById('weekNext').addEventListener('click', ()=>{
+  weekOffset += 1; clampWeekOffset(); renderDayPills();
+});
+function renderDayPills(){
+  clampWeekOffset();
+  const wrap = document.getElementById('weekGrid');
+  wrap.innerHTML = '';
+  const today = new Date(new Date().toDateString());
+  const currentSunday = sundayOf(today);
+  const sunday = new Date(currentSunday); sunday.setDate(currentSunday.getDate() + weekOffset*7);
+
+  const scheduleByDate = {};
+  state.schedule.forEach(s=>{
+    if(!scheduleByDate[s.date]) scheduleByDate[s.date] = [];
+    scheduleByDate[s.date].push(s);
+  });
+
+  const weekDates = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(sunday); d.setDate(sunday.getDate()+i);
+    weekDates.push(d);
+  }
+  const weekISOs = weekDates.map(d=>d.toISOString().slice(0,10));
+
+  if(selectedWeekDayISO === null || !weekISOs.includes(selectedWeekDayISO)){
+    const todayISO = today.toISOString().slice(0,10);
+    selectedWeekDayISO = weekISOs.includes(todayISO) ? todayISO : weekISOs[0];
+  }
+
+  const rangeLabel = weekDates[0].toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' – ' + weekDates[6].toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  document.getElementById('weekRangeLabel').textContent = weekOffset===0 ? 'This week' : rangeLabel;
+
+  weekDates.forEach(d=>{
+    const iso = d.toISOString().slice(0,10);
+    const isToday = d.getTime()===today.getTime();
+    const isSelected = iso === selectedWeekDayISO;
+    const items = scheduleByDate[iso] || [];
+    const dots = items.length
+      ? items.slice(0,6).map(it=>`<span style="background:${centerColor(it.center)}"></span>`).join('')
+      : '<span class="weekday-empty"></span>';
+
+    const el = document.createElement('div');
+    el.className = 'weekday-card' + (isToday?' today':'') + (isSelected?' selected':'');
+    el.setAttribute('role','button');
+    el.setAttribute('tabindex','0');
+    el.innerHTML = `<div class="weekday-name">${d.toLocaleDateString('en-US',{weekday:'short'})}</div>
+      <div class="weekday-num">${d.getDate()}</div>
+      <div class="weekday-dots">${dots}</div>`;
+
+    const selectDay = ()=>{ selectedWeekDayISO = iso; renderDayPills(); };
+    el.addEventListener('click', selectDay);
+    el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectDay(); } });
+
+    wrap.appendChild(el);
+  });
+
+  renderWeekDayDetail(weekDates.find(d=>d.toISOString().slice(0,10)===selectedWeekDayISO), scheduleByDate[selectedWeekDayISO] || []);
+
+  const bounds = getScheduleDateBounds();
+  if(bounds){
+    const minSunday = sundayOf(new Date(bounds.min+'T00:00:00'));
+    const maxSunday = sundayOf(new Date(bounds.max+'T00:00:00'));
+    document.getElementById('weekPrev').disabled = sunday <= minSunday;
+    document.getElementById('weekNext').disabled = sunday >= maxSunday;
+  } else {
+    document.getElementById('weekPrev').disabled = true;
+    document.getElementById('weekNext').disabled = true;
+  }
+}
+function renderWeekDayDetail(dateObj, items){
+  const el = document.getElementById('weekDayDetail');
+  if(!dateObj){ el.innerHTML = ''; return; }
+  const dayLabel = dateObj.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
+  if(!items.length){
+    el.innerHTML = `<div class="week-detail-date">${dayLabel}</div><div style="font-size:12.5px; color:var(--ink-soft);">Nothing scheduled.</div>`;
+    return;
+  }
+  const rows = items.map(it => `<div class="week-detail-row">${centerBadge(it.center)}<span>${shortScheduleLabel(it.label)}</span></div>`).join('');
+  el.innerHTML = `<div class="week-detail-date">${dayLabel}</div>${rows}`;
+}
+
+// streak stat bars
+const STUDY_HOURS_TARGET = 375; // TopLab's total review hours
+function renderStreakStats(){
+  document.getElementById('statCurrentStreak').innerHTML = state.streak + '<span style="font-size:13px; font-weight:500; color:var(--ink-soft);"> days</span>';
+  const totalHours = state.sessions.reduce((s,x)=>s+Number(x.hours),0);
+  const roundedHours = Math.round(totalHours*10)/10;
+  document.getElementById('statTotalHours').innerHTML = roundedHours + '<span style="font-size:13px; font-weight:500; color:var(--ink-soft);"> hrs</span>';
+  const max = Math.max(state.bestStreak, 1);
+  document.getElementById('tickCurrent').style.left = Math.min(100, (state.streak/max)*100) + '%';
+  document.getElementById('tickHours').style.left = Math.min(100, (totalHours/STUDY_HOURS_TARGET)*100) + '%';
+}
+
+// heatmap — monthly paged view, July 2026 (review start) through January 2027 (exam)
+const HEATMAP_MIN = {y:2026, m:6}; // July 2026, 0-indexed month
+const HEATMAP_MAX = {y:2027, m:0}; // January 2027
+let heatmapMonth = null;
+function clampHeatmapMonth(){
+  const val = heatmapMonth.y*12 + heatmapMonth.m;
+  const min = HEATMAP_MIN.y*12 + HEATMAP_MIN.m;
+  const max = HEATMAP_MAX.y*12 + HEATMAP_MAX.m;
+  if(val < min) heatmapMonth = {y:HEATMAP_MIN.y, m:HEATMAP_MIN.m};
+  if(val > max) heatmapMonth = {y:HEATMAP_MAX.y, m:HEATMAP_MAX.m};
+}
+document.getElementById('heatmapPrev').addEventListener('click', ()=>{
+  heatmapMonth = heatmapMonth.m===0 ? {y:heatmapMonth.y-1, m:11} : {y:heatmapMonth.y, m:heatmapMonth.m-1};
+  clampHeatmapMonth();
+  renderHeatmap();
+});
+document.getElementById('heatmapNext').addEventListener('click', ()=>{
+  heatmapMonth = heatmapMonth.m===11 ? {y:heatmapMonth.y+1, m:0} : {y:heatmapMonth.y, m:heatmapMonth.m+1};
+  clampHeatmapMonth();
+  renderHeatmap();
+});
+function renderHeatmap(){
+  if(heatmapMonth === null){
+    const now = new Date();
+    heatmapMonth = {y: now.getFullYear(), m: now.getMonth()};
+    clampHeatmapMonth();
+  }
+  const {y, m} = heatmapMonth;
+  document.getElementById('heatmapMonthLabel').textContent = new Date(y, m, 1).toLocaleDateString('en-US',{month:'long', year:'numeric'});
+
+  const hoursByDate = {};
+  state.sessions.forEach(s=>{ hoursByDate[s.date] = (hoursByDate[s.date]||0) + Number(s.hours); });
+
+  const firstDay = new Date(y, m, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+
+  let cells = '';
+  for(let i=0;i<startWeekday;i++){ cells += `<div class="cell" style="background:transparent;"></div>`; }
+  let monthTotal = 0;
+  for(let d=1; d<=daysInMonth; d++){
+    const dateObj = new Date(y, m, d);
+    const hrs = hoursByDate[dateObj.toDateString()] || 0;
+    monthTotal += hrs;
+    let bg = 'rgba(29,29,31,0.06)';
+    if(hrs >= 3) bg = '#FF8A65';
+    else if(hrs >= 1.5) bg = '#F0987A';
+    else if(hrs > 0) bg = '#F4C7B0';
+    cells += `<div class="cell" title="${dateObj.toDateString()}: ${hrs}h" style="background:${bg}"></div>`;
+  }
+  document.getElementById('heatmapGrid').innerHTML = cells;
+  document.getElementById('heatmapTotal').textContent = (Math.round(monthTotal*10)/10) + 'h this month';
+
+  const val = y*12 + m;
+  const min = HEATMAP_MIN.y*12 + HEATMAP_MIN.m;
+  const max = HEATMAP_MAX.y*12 + HEATMAP_MAX.m;
+  document.getElementById('heatmapPrev').disabled = val <= min;
+  document.getElementById('heatmapNext').disabled = val >= max;
+}
+
+// log
+function registerStudyActivity(dateStr){
+  // Only bumps the streak when the activity is for today — backfilled/past dates
+  // (e.g. marking an old class attended) shouldn't retroactively rewrite the streak.
+  if(dateStr !== todayStr()) return;
+  if(state.lastLogDate !== todayStr()){
+    const y = new Date(); y.setDate(y.getDate()-1);
+    state.streak = state.lastLogDate === y.toDateString() ? state.streak+1 : 1;
+    state.lastLogDate = todayStr();
+    if(state.streak > state.bestStreak) state.bestStreak = state.streak;
+  }
+}
+document.getElementById('logBtn').addEventListener('click', ()=>{
+  const subject = document.getElementById('logSubject').value;
+  const hours = document.getElementById('logHours').value;
+  const topic = document.getElementById('logTopic').value;
+  if(!hours || Number(hours)<=0){ toast('Add how many hours, first.'); return; }
+  const today = todayStr();
+  registerStudyActivity(today);
+  state.sessions.unshift({subject, hours:Number(hours), topic, date:today});
+  save();
+  document.getElementById('logHours').value=''; document.getElementById('logTopic').value='';
+  renderAll();
+  toast('Logged — nice work today.');
+});
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  setTimeout(()=>{ if(t.textContent===msg) t.textContent=''; }, 3000);
+}
+
+// schedule — editable review centers + entries
+function renderCenterNames(){
+  const wrap = document.getElementById('centerNames');
+  wrap.innerHTML = state.centers.map((c,i)=>
+    `<div style="display:flex; align-items:center; gap:6px; flex:1 1 100px;">
+      <span style="width:9px; height:9px; border-radius:50%; background:${centerColor(c)}; flex-shrink:0;"></span>
+      <input type="text" class="center-input" data-idx="${i}" value="${c}" style="flex:1;">
+    </div>`).join('');
+  wrap.querySelectorAll('.center-input').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      state.centers[Number(inp.dataset.idx)] = inp.value || ('Review Center ' + (Number(inp.dataset.idx)+1));
+      save(); renderCenterNames(); renderScheduleSelect(); renderSchedule();
+    });
+  });
+}
+const CENTER_COLORS = { 'TopLab':'#6E63E0', 'MST':'#F2A65A', 'Padilla':'#5FB89C' };
+function centerColor(name){ return CENTER_COLORS[name] || '#9AA0A6'; }
+function centerBadge(name){
+  const c = centerColor(name);
+  return `<span style="display:inline-flex; align-items:center; gap:4px; font-size:9.5px; font-weight:700; padding:2px 8px; border-radius:999px; background:${c}22; color:${c}; white-space:nowrap;"><span style="width:6px; height:6px; border-radius:50%; background:${c}; display:inline-block;"></span>${name}</span>`;
+}
+let editingScheduleIndex = null;
+let collapsedMonths = null; // Set — initialized on first render, then persists across re-renders
+function renderScheduleSelect(){
+  const sel = document.getElementById('scheduleCenter');
+  const current = sel.value;
+  sel.innerHTML = state.centers.map(c=>`<option>${c}</option>`).join('');
+  if(state.centers.includes(current)) sel.value = current;
+}
+function renderScheduleFilterOptions(){
+  const sel = document.getElementById('scheduleFilter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="__all__">All centers</option>' + state.centers.map(c=>`<option>${c}</option>`).join('');
+  sel.value = (current && [...sel.options].some(o=>o.value===current)) ? current : '__all__';
+}
+document.getElementById('scheduleFilter').addEventListener('change', renderSchedule);
+document.getElementById('scheduleUpcomingOnly').addEventListener('change', renderSchedule);
+document.getElementById('scheduleBtn').addEventListener('click', ()=>{
+  const center = document.getElementById('scheduleCenter').value;
+  const date = document.getElementById('scheduleDate').value;
+  const label = document.getElementById('scheduleLabel').value;
+  if(!date || !label){ toast('Add a date and what it is, first.'); return; }
+  state.schedule.push({id:'sched-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), center, date, label, attended:false});
+  state.schedule.sort((a,b)=> new Date(a.date) - new Date(b.date));
+  save();
+  document.getElementById('scheduleDate').value=''; document.getElementById('scheduleLabel').value='';
+  renderSchedule();
+  toast('Added to your schedule.');
+});
+function scheduleRowHTML(s){
+  const d = new Date(s.date);
+  const dateLabel = isNaN(d) ? s.date : d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  if(editingScheduleIndex === s.i){
+    const catOptions = state.centers.map(c=>`<option ${c===s.center?'selected':''}>${c}</option>`).join('');
+    const isoDate = isNaN(d) ? '' : d.toISOString().slice(0,10);
+    return `<li style="flex-direction:column; align-items:stretch; gap:8px;">
+      <div class="logrow">
+        <select data-editschedcenter="${s.i}" style="flex:1 1 110px;">${catOptions}</select>
+        <input type="date" data-editscheddate="${s.i}" value="${isoDate}" style="flex:1 1 120px;">
+      </div>
+      <div class="logrow" style="align-items:center;">
+        <input type="text" data-editschedlabel="${s.i}" value="${s.label.replace(/"/g,'&quot;')}" style="flex:1 1 160px;">
+        <button class="btn" data-savesched="${s.i}" type="button" style="padding:6px 12px; font-size:10.5px;">Save</button>
+        <button class="btn" data-cancelsched="${s.i}" type="button" style="padding:6px 12px; font-size:10.5px; background:rgba(29,29,31,0.08); color:var(--ink);">Cancel</button>
+      </div>
+    </li>`;
+  }
+  return `<li>
+    <label style="display:flex; align-items:center; gap:8px; flex:1; cursor:pointer;">
+      <input type="checkbox" data-attend="${s.id}" ${s.attended?'checked':''} title="Mark attended — logs it as a Lecture session">
+      <span>${dateLabel} — ${s.label} ${centerBadge(s.center)}</span></label>
+    <span style="display:flex; align-items:center; gap:6px;">
+      <button class="btn" data-editsched="${s.i}" type="button" style="padding:4px 9px; font-size:10px; background:rgba(29,29,31,0.08); color:var(--ink);">Edit</button>
+      <button class="btn" data-del="${s.i}" type="button" style="padding:4px 9px; font-size:10px; background:rgba(255,138,101,0.15); color:var(--coral);">Remove</button>
+    </span></li>`;
+}
+function renderSchedule(){
+  const el = document.getElementById('scheduleList');
+  renderScheduleFilterOptions();
+  if(!state.schedule.length){
+    el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">No schedule items yet — add one above, or send me your review centers\' calendars and I\'ll fill this in.</p>';
+    document.getElementById('scheduleCount').textContent = '';
+    return;
+  }
+  const filterCenter = document.getElementById('scheduleFilter').value;
+  const upcomingOnly = document.getElementById('scheduleUpcomingOnly').checked;
+  const today = new Date(new Date().toDateString());
+
+  const indexed = state.schedule.map((s,i)=>({...s, i}));
+  const visible = indexed.filter(s=>{
+    if(filterCenter !== '__all__' && s.center !== filterCenter) return false;
+    if(upcomingOnly && !isNaN(new Date(s.date)) && new Date(s.date) < today) return false;
+    return true;
+  });
+
+  document.getElementById('scheduleCount').textContent = visible.length + ' of ' + state.schedule.length;
+
+  if(!visible.length){
+    el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">Nothing matches this filter.</p>';
+    return;
+  }
+
+  // group by month
+  const groups = {}; // key -> {label, items:[]}
+  visible.forEach(s=>{
+    const d = new Date(s.date);
+    const key = isNaN(d) ? 'undated' : d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const label = isNaN(d) ? 'Undated' : d.toLocaleDateString('en-US',{month:'long', year:'numeric'});
+    if(!groups[key]) groups[key] = {label, items:[]};
+    groups[key].items.push(s);
+  });
+  const groupKeys = Object.keys(groups).sort();
+
+  // default open state: first render only, expand the first two groups
+  if(collapsedMonths === null){
+    collapsedMonths = new Set(groupKeys.slice(2));
+  }
+
+  el.innerHTML = groupKeys.map(key=>{
+    const g = groups[key];
+    const isCollapsed = collapsedMonths.has(key);
+    return `<div class="sched-group">
+      <button type="button" class="sched-group-header" data-monthtoggle="${key}">
+        <span>${g.label}</span>
+        <span class="sched-group-meta"><span>${g.items.length}</span><span class="chev${isCollapsed?'':' open'}">›</span></span>
+      </button>
+      <ul class="plain sched-group-body" style="display:${isCollapsed?'none':'block'};">
+        ${g.items.map(scheduleRowHTML).join('')}
+      </ul>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('[data-attend]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{ toggleScheduleAttendance(cb.dataset.attend, cb.checked); });
+  });
+  el.querySelectorAll('[data-monthtoggle]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.monthtoggle;
+      if(collapsedMonths.has(key)) collapsedMonths.delete(key); else collapsedMonths.add(key);
+      renderSchedule();
+    });
+  });
+  el.querySelectorAll('[data-editsched]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ editingScheduleIndex = Number(btn.dataset.editsched); renderSchedule(); });
+  });
+  el.querySelectorAll('[data-cancelsched]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ editingScheduleIndex = null; renderSchedule(); });
+  });
+  el.querySelectorAll('[data-savesched]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const i = Number(btn.dataset.savesched);
+      const center = el.querySelector(`[data-editschedcenter="${i}"]`).value;
+      const date = el.querySelector(`[data-editscheddate="${i}"]`).value;
+      const label = el.querySelector(`[data-editschedlabel="${i}"]`).value;
+      if(!date || !label){ toast('Add a date and what it is, first.'); return; }
+      state.schedule[i] = { center, date, label };
+      state.schedule.sort((a,b)=> new Date(a.date) - new Date(b.date));
+      editingScheduleIndex = null;
+      save(); renderSchedule();
+    });
+  });
+  el.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.schedule.splice(Number(btn.dataset.del),1);
+      editingScheduleIndex = null;
+      save(); renderSchedule();
+    });
+  });
+}
+// milestone badges — tied to real thresholds, not arbitrary points
+function renderBadges(){
+  const totalHours = state.sessions.reduce((s,x)=>s+Number(x.hours),0);
+  const bestMock = state.mocks.reduce((max,m)=>Math.max(max, Number(m.pct)||0), 0);
+  const centersWithAttendance = new Set(state.schedule.filter(s=>s.attended).map(s=>s.center));
+  const allCentersAttended = state.centers.length>0 && state.centers.every(c=>centersWithAttendance.has(c));
+  const booksWithRead = n => state.books.filter(b=>b.reads && b.reads[n]).length;
+  const readComplete = n => state.books.length>0 && booksWithRead(n) === state.books.length;
+
+  function centerFinisher(center){
+    const items = state.schedule.filter(s=>s.center===center);
+    const done = items.filter(s=>s.attended).length;
+    return { total: items.length, done, complete: items.length>0 && done===items.length };
+  }
+  const centerProgress = {};
+  state.centers.forEach(c=>{ centerProgress[c] = centerFinisher(c); });
+
+  const badges = [
+    {
+      icon:'⏱️', name:'50 Hours', unlocked: totalHours>=50,
+      sub: totalHours>=50 ? 'Unlocked' : Math.floor(totalHours)+'/50 hrs',
+      desc:'Log 50 total hours of study across any session type.'
+    },
+    {
+      icon:'📚', name:'150 Hours', unlocked: totalHours>=150,
+      sub: totalHours>=150 ? 'Unlocked' : Math.floor(totalHours)+'/150 hrs',
+      desc:'Log 150 total hours of study.'
+    },
+    {
+      icon:'🏛️', name:'300 Hours', unlocked: totalHours>=300,
+      sub: totalHours>=300 ? 'Unlocked' : Math.floor(totalHours)+'/300 hrs',
+      desc:'Log 300 total hours — closing in on TopLab\'s full 375-hour syllabus.'
+    },
+    {
+      icon:'🎯', name:'70%+ Mock', unlocked: bestMock>=70,
+      sub: bestMock>=70 ? 'Unlocked' : (bestMock>0 ? 'Best: '+Math.round(bestMock)+'%' : 'No mocks yet'),
+      desc:'Score 70% or higher on any recorded mock exam.'
+    },
+    {
+      icon:'🏆', name:'90%+ Mock', unlocked: bestMock>=90,
+      sub: bestMock>=90 ? 'Unlocked' : (bestMock>0 ? 'Best: '+Math.round(bestMock)+'%' : 'No mocks yet'),
+      desc:'Score 90% or higher on any recorded mock — Top 1 territory.'
+    },
+    {
+      icon:'📝', name:'10 Mocks Logged', unlocked: state.mocks.length>=10,
+      sub: state.mocks.length>=10 ? 'Unlocked' : state.mocks.length+'/10 mocks',
+      desc:'Record 10 mock exams — consistency in testing yourself matters as much as reviewing.'
+    },
+    {
+      icon:'🔥', name:'30-Day Streak', unlocked: state.bestStreak>=30,
+      sub: state.bestStreak>=30 ? 'Unlocked' : state.bestStreak+'/30 days',
+      desc:'Reach a 30-day study streak.'
+    },
+    {
+      icon:'💪', name:'60-Day Streak', unlocked: state.bestStreak>=60,
+      sub: state.bestStreak>=60 ? 'Unlocked' : state.bestStreak+'/60 days',
+      desc:'Reach a 60-day study streak.'
+    },
+    {
+      icon:'🚀', name:'100-Day Streak', unlocked: state.bestStreak>=100,
+      sub: state.bestStreak>=100 ? 'Unlocked' : state.bestStreak+'/100 days',
+      desc:'Reach a 100-day study streak — this is what Top 1 discipline looks like.'
+    },
+    {
+      icon:'🗂️', name:'All 3 Centers', unlocked: allCentersAttended,
+      sub: allCentersAttended ? 'Unlocked' : centersWithAttendance.size+'/'+state.centers.length+' started',
+      desc:'Attend at least one session at every review center you\'re enrolled in.'
+    },
+    {
+      icon:'🔵', name:'TopLab Finisher', unlocked: centerProgress['TopLab']?.complete || false,
+      sub: centerProgress['TopLab'] ? (centerProgress['TopLab'].complete ? 'Unlocked' : centerProgress['TopLab'].done+'/'+centerProgress['TopLab'].total+' sessions') : 'No schedule yet',
+      desc:'Mark every scheduled TopLab session as attended.'
+    },
+    {
+      icon:'🟡', name:'MST Finisher', unlocked: centerProgress['MST']?.complete || false,
+      sub: centerProgress['MST'] ? (centerProgress['MST'].complete ? 'Unlocked' : centerProgress['MST'].done+'/'+centerProgress['MST'].total+' sessions') : 'No schedule yet',
+      desc:'Mark every scheduled MST session as attended.'
+    },
+    {
+      icon:'🟣', name:'Padilla Finisher', unlocked: centerProgress['Padilla']?.complete || false,
+      sub: centerProgress['Padilla'] ? (centerProgress['Padilla'].complete ? 'Unlocked' : centerProgress['Padilla'].done+'/'+centerProgress['Padilla'].total+' sessions') : 'No schedule yet',
+      desc:'Mark every scheduled Padilla session as attended.'
+    },
+    {
+      icon:'📖', name:'First Read Complete', unlocked: readComplete(0),
+      sub: readComplete(0) ? 'Unlocked' : booksWithRead(0)+'/'+state.books.length+' books',
+      desc:'Check off "1st Read" on every book in your reading list.'
+    },
+    {
+      icon:'📗', name:'Second Read Complete', unlocked: readComplete(1),
+      sub: readComplete(1) ? 'Unlocked' : booksWithRead(1)+'/'+state.books.length+' books',
+      desc:'Check off "2nd Read" on every book in your reading list.'
+    },
+    {
+      icon:'📘', name:'Mastery — 3rd Read', unlocked: readComplete(2),
+      sub: readComplete(2) ? 'Unlocked' : booksWithRead(2)+'/'+state.books.length+' books',
+      desc:'Check off "3rd Read" on every book — full mastery pass through the reading list.'
+    }
+  ];
+
+  const otherUnlocked = badges.every(b=>b.unlocked);
+  badges.push({
+    icon:'👑', name:'Full Circle', unlocked: otherUnlocked,
+    sub: otherUnlocked ? 'Unlocked' : badges.filter(b=>b.unlocked).length+'/'+badges.length+' milestones',
+    desc:'Unlock every other milestone. This is the whole board, cleared.'
+  });
+
+  document.getElementById('badgeRow').innerHTML = badges.map((b,i)=>`
+    <div class="badge${b.unlocked?' unlocked':''}" data-badgeidx="${i}" role="button" tabindex="0">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+      <div class="badge-sub">${b.sub}</div>
+    </div>`).join('');
+
+  const showBadgeInfo = (b)=>{
+    badgeToast((b.unlocked ? '✓ ' : '') + b.name + ' — ' + b.desc);
+  };
+  document.querySelectorAll('#badgeRow [data-badgeidx]').forEach(el=>{
+    el.addEventListener('click', ()=> showBadgeInfo(badges[Number(el.dataset.badgeidx)]));
+    el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); showBadgeInfo(badges[Number(el.dataset.badgeidx)]); } });
+  });
+}
+function badgeToast(msg){
+  const t = document.getElementById('badgeToastText');
+  t.textContent = msg;
+  clearTimeout(window.__badgeToastTimer);
+  window.__badgeToastTimer = setTimeout(()=>{ if(t.textContent===msg) t.textContent=''; }, 4500);
+}
+
+// desktop support for the milestones slider — arrow buttons, wheel scroll, click-drag
+(function setupBadgeRowDesktopScroll(){
+  const el = document.getElementById('badgeRow');
+  const SCROLL_STEP = 232; // roughly two badges
+
+  document.getElementById('badgePrev').addEventListener('click', ()=>{
+    el.scrollBy({left: -SCROLL_STEP, behavior:'smooth'});
+  });
+  document.getElementById('badgeNext').addEventListener('click', ()=>{
+    el.scrollBy({left: SCROLL_STEP, behavior:'smooth'});
+  });
+
+  // vertical mouse wheel → horizontal scroll
+  el.addEventListener('wheel', (e)=>{
+    if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    }
+  }, {passive:false});
+
+  // click-and-drag scrolling
+  let isDown = false, startX = 0, scrollStart = 0, moved = false;
+  el.addEventListener('mousedown', (e)=>{
+    isDown = true; moved = false; el.classList.add('dragging');
+    startX = e.clientX; scrollStart = el.scrollLeft;
+  });
+  window.addEventListener('mouseup', ()=>{ isDown = false; el.classList.remove('dragging'); });
+  el.addEventListener('mousemove', (e)=>{
+    if(!isDown) return;
+    const dx = e.clientX - startX;
+    if(Math.abs(dx) > 4) moved = true;
+    el.scrollLeft = scrollStart - dx;
+  });
+  // swallow the click that follows a drag so it doesn't also open a badge's info toast
+  el.addEventListener('click', (e)=>{
+    if(moved){ e.stopPropagation(); e.preventDefault(); moved = false; }
+  }, true);
+})();
+
+// mocks — category dropdown, score/total → live percentage, per-category stats
+function renderMockCategorySelect(){
+  const sel = document.getElementById('mockCategory');
+  const current = sel.value;
+  sel.innerHTML = state.mockCategories.map(c=>`<option>${c}</option>`).join('');
+  if(state.mockCategories.includes(current)) sel.value = current;
+}
+document.getElementById('addCategoryBtn').addEventListener('click', ()=>{
+  const row = document.getElementById('newCategoryRow');
+  row.style.display = 'flex';
+  document.getElementById('newCategoryInput').value = '';
+  document.getElementById('newCategoryInput').focus();
+});
+document.getElementById('cancelCategoryBtn').addEventListener('click', ()=>{
+  document.getElementById('newCategoryRow').style.display = 'none';
+});
+function addNewCategory(){
+  const input = document.getElementById('newCategoryInput');
+  const trimmed = input.value.trim();
+  if(!trimmed) return;
+  if(!state.mockCategories.includes(trimmed)) state.mockCategories.push(trimmed);
+  save();
+  renderMockCategorySelect();
+  document.getElementById('mockCategory').value = trimmed;
+  document.getElementById('newCategoryRow').style.display = 'none';
+}
+document.getElementById('confirmCategoryBtn').addEventListener('click', addNewCategory);
+document.getElementById('newCategoryInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){ e.preventDefault(); addNewCategory(); }
+});
+
+// manage (edit/remove) mock categories
+let editingMockCategory = null;
+document.getElementById('manageCategoriesBtn').addEventListener('click', ()=>{
+  const panel = document.getElementById('categoryManageList');
+  const opening = panel.style.display === 'none';
+  panel.style.display = opening ? 'block' : 'none';
+  if(opening) renderCategoryManageList();
+});
+function renderCategoryManageList(){
+  const el = document.getElementById('categoryManageList');
+  el.innerHTML = state.mockCategories.map(cat=>{
+    if(editingMockCategory === cat){
+      return `<div class="logrow" style="margin-bottom:6px;">
+        <input type="text" data-renamecat="${cat}" value="${cat.replace(/"/g,'&quot;')}" style="flex:1 1 130px;">
+        <button class="btn" data-saverenamecat="${cat}" type="button" style="padding:6px 10px; font-size:10.5px;">Save</button>
+        <button class="btn" data-cancelrenamecat type="button" style="padding:6px 10px; font-size:10.5px; background:rgba(29,29,31,0.08); color:var(--ink);">Cancel</button>
+      </div>`;
+    }
+    return `<div class="logrow" style="margin-bottom:6px; align-items:center;">
+      <span style="flex:1; font-size:12.5px; font-weight:600;">${cat}</span>
+      <button class="btn" data-editcat="${cat}" type="button" style="padding:5px 10px; font-size:10.5px; background:rgba(29,29,31,0.08); color:var(--ink);">Edit</button>
+      <button class="btn" data-removecat="${cat}" type="button" style="padding:5px 10px; font-size:10.5px; background:rgba(255,138,101,0.15); color:var(--coral);">Remove</button>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('[data-editcat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ editingMockCategory = btn.dataset.editcat; renderCategoryManageList(); });
+  });
+  el.querySelectorAll('[data-cancelrenamecat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ editingMockCategory = null; renderCategoryManageList(); });
+  });
+  el.querySelectorAll('[data-saverenamecat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const oldName = btn.dataset.saverenamecat;
+      const input = el.querySelector(`[data-renamecat="${oldName}"]`);
+      const newName = input.value.trim();
+      if(!newName){ mockToast('Category name can\'t be empty.'); return; }
+      if(newName !== oldName && state.mockCategories.includes(newName)){ mockToast('That category already exists.'); return; }
+      const idx = state.mockCategories.indexOf(oldName);
+      if(idx > -1) state.mockCategories[idx] = newName;
+      state.mocks.forEach(m=>{ if(m.category === oldName) m.category = newName; });
+      editingMockCategory = null;
+      save();
+      renderMockCategorySelect(); renderCategoryManageList(); renderMocks(); renderMockStats();
+      mockToast('Category renamed.');
+    });
+  });
+  el.querySelectorAll('[data-removecat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const cat = btn.dataset.removecat;
+      if(state.mockCategories.length <= 1){ mockToast('Keep at least one category.'); return; }
+      state.mockCategories = state.mockCategories.filter(c=>c!==cat);
+      const fallback = 'Uncategorized';
+      const inUse = state.mocks.some(m=>m.category===cat);
+      if(inUse){
+        if(!state.mockCategories.includes(fallback)) state.mockCategories.push(fallback);
+        state.mocks.forEach(m=>{ if(m.category === cat) m.category = fallback; });
+      }
+      save();
+      renderMockCategorySelect(); renderCategoryManageList(); renderMocks(); renderMockStats();
+      mockToast(inUse ? 'Removed — those mocks moved to "Uncategorized."' : 'Category removed.');
+    });
+  });
+}
+function updateMockPctPreview(){
+  const got = Number(document.getElementById('mockScoreGot').value);
+  const total = Number(document.getElementById('mockScoreTotal').value);
+  const el = document.getElementById('mockPctPreview');
+  if(total > 0){ el.textContent = Math.round((got/total)*100) + '%'; }
+  else{ el.textContent = '—'; }
+}
+document.getElementById('mockScoreGot').addEventListener('input', updateMockPctPreview);
+document.getElementById('mockScoreTotal').addEventListener('input', updateMockPctPreview);
+
+document.getElementById('mockBtn').addEventListener('click', ()=>{
+  const category = document.getElementById('mockCategory').value;
+  const name = document.getElementById('mockName').value;
+  const got = Number(document.getElementById('mockScoreGot').value);
+  const total = Number(document.getElementById('mockScoreTotal').value);
+  if(!total || total<=0 || got<0){ mockToast('Add a score and a total, first.'); return; }
+  const pct = (got/total)*100;
+  state.mocks.unshift({category, name, got, total, pct, date:todayStr()});
+  save();
+  document.getElementById('mockName').value=''; document.getElementById('mockScoreGot').value=''; document.getElementById('mockScoreTotal').value='';
+  updateMockPctPreview();
+  renderMocks(); renderMockStats(); renderBadges();
+  mockToast('Mock saved.');
+});
+function mockToast(msg){
+  const t = document.getElementById('mockToast');
+  t.textContent = msg;
+  setTimeout(()=>{ if(t.textContent===msg) t.textContent=''; }, 3000);
+}
+let editingMockIndex = null;
+function renderMocks(){
+  const el = document.getElementById('mockHistory');
+  if(!state.mocks.length){ el.innerHTML = '<li>No mocks yet.</li>'; return; }
+  el.innerHTML = state.mocks.map((m,i)=>{
+    if(editingMockIndex === i){
+      const catOptions = state.mockCategories.map(c=>`<option ${c===m.category?'selected':''}>${c}</option>`).join('');
+      return `<li style="flex-direction:column; align-items:stretch; gap:8px;">
+        <div class="logrow">
+          <select data-editcat="${i}" style="flex:1 1 110px;">${catOptions}</select>
+          <input type="text" data-editname="${i}" value="${m.name||''}" placeholder="test name" style="flex:1 1 110px;">
+        </div>
+        <div class="logrow" style="align-items:center;">
+          <input type="number" data-editgot="${i}" value="${m.got}" style="width:64px;">
+          <span style="color:var(--ink-soft); font-weight:600;">/</span>
+          <input type="number" data-edittotal="${i}" value="${m.total}" style="width:64px;">
+          <button class="btn" data-savemock="${i}" type="button" style="padding:6px 12px; font-size:10.5px;">Save</button>
+          <button class="btn" data-cancelmock="${i}" type="button" style="padding:6px 12px; font-size:10.5px; background:rgba(29,29,31,0.08); color:var(--ink);">Cancel</button>
+        </div>
+      </li>`;
+    }
+    return `<li>
+      <span>${m.category}${m.name? ' — '+m.name:''} <span class="mono" style="text-transform:none; letter-spacing:0; font-weight:500;">${m.got}/${m.total}</span></span>
+      <span style="display:flex; align-items:center; gap:6px;">
+        <span>${Math.round(m.pct)}%</span>
+        <button class="btn" data-editmock="${i}" type="button" style="padding:4px 9px; font-size:10px; background:rgba(29,29,31,0.08); color:var(--ink);">Edit</button>
+        <button class="btn" data-delmock="${i}" type="button" style="padding:4px 9px; font-size:10px; background:rgba(255,138,101,0.15); color:var(--coral);">Delete</button>
+      </span>
+    </li>`;
+  }).join('');
+
+  el.querySelectorAll('[data-editmock]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ editingMockIndex = Number(btn.dataset.editmock); renderMocks(); });
+  });
+  el.querySelectorAll('[data-delmock]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.mocks.splice(Number(btn.dataset.delmock),1);
+      save(); editingMockIndex=null; renderMocks(); renderMockStats(); renderBadges();
+    });
+  });
+  el.querySelectorAll('[data-cancelmock]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ editingMockIndex=null; renderMocks(); });
+  });
+  el.querySelectorAll('[data-savemock]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const i = Number(btn.dataset.savemock);
+      const cat = el.querySelector(`[data-editcat="${i}"]`).value;
+      const name = el.querySelector(`[data-editname="${i}"]`).value;
+      const got = Number(el.querySelector(`[data-editgot="${i}"]`).value);
+      const total = Number(el.querySelector(`[data-edittotal="${i}"]`).value);
+      if(!total || total<=0 || got<0){ mockToast('Add a valid score and total.'); return; }
+      state.mocks[i] = { category:cat, name, got, total, pct:(got/total)*100, date:state.mocks[i].date };
+      save(); editingMockIndex=null; renderMocks(); renderMockStats(); renderBadges();
+    });
+  });
+}
+function renderMockStats(){
+  const cats = {};
+  state.mocks.forEach(m=>{
+    if(!cats[m.category]) cats[m.category] = [];
+    cats[m.category].push(m.pct);
+  });
+  const rows = Object.keys(cats).map(c=>{
+    const arr = cats[c];
+    const avg = arr.reduce((a,b)=>a+b,0)/arr.length;
+    return {category:c, avg, count:arr.length};
+  }).sort((a,b)=>b.avg-a.avg);
+
+  const el = document.getElementById('mockStats');
+  if(!rows.length){
+    el.innerHTML = '<div style="font-size:12px; color:var(--ink-soft);">Log a mock to see how each category compares.</div>';
+    return;
+  }
+  let html = '';
+  if(rows.length>1){
+    const strongest = rows[0], weakest = rows[rows.length-1];
+    html += `<div style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;">Strongest: <b style="color:var(--ink);">${strongest.category}</b> (${Math.round(strongest.avg)}%) · Needs focus: <b style="color:var(--coral);">${weakest.category}</b> (${Math.round(weakest.avg)}%)</div>`;
+  }
+  html += rows.map(r=>`
+    <div style="margin-bottom:11px;">
+      <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:5px;">
+        <span>${r.category} <span style="color:var(--ink-faint); font-weight:500;">(${r.count})</span></span>
+        <span>${Math.round(r.avg)}%</span>
+      </div>
+      <div class="catbar-track"><div class="catbar-fill" style="width:${Math.min(100,r.avg)}%"></div></div>
+    </div>`).join('');
+  el.innerHTML = html;
+}
+
+// reading
+function renderBookSelect(){
+  const sel = document.getElementById('bookSelect');
+  const current = sel.value;
+  const byCategory = {};
+  state.books.forEach(b=>{
+    const cat = b.category || 'Custom';
+    if(!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(b);
+  });
+  sel.innerHTML = Object.keys(byCategory).map(cat=>
+    `<optgroup label="${cat}">${byCategory[cat].map(b=>`<option value="${b.title}">${b.title}</option>`).join('')}</optgroup>`
+  ).join('');
+  if(state.books.some(b=>b.title===current)) sel.value = current;
+}
+document.getElementById('bookBtn').addEventListener('click', ()=>{
+  const sel = document.getElementById('bookSelect');
+  const title = sel.value;
+  const pages = document.getElementById('bookPages').value;
+  const hours = document.getElementById('bookHours').value;
+  if(!title || (!pages && !hours)){ bookToast('Add pages read and/or hours spent.'); return; }
+  const existing = state.books.find(b=>b.title===title);
+  if(pages && existing) existing.pages += Number(pages);
+  if(hours && Number(hours) > 0){
+    const today = todayStr();
+    registerStudyActivity(today);
+    state.sessions.unshift({ subject:'Reading', hours:Number(hours), topic:title, date:today });
+  }
+  save();
+  document.getElementById('bookPages').value=''; document.getElementById('bookHours').value='';
+  renderAll();
+  bookToast('Logged.');
+});
+function bookToast(msg){
+  const t = document.getElementById('bookToast');
+  t.textContent = msg;
+  setTimeout(()=>{ if(t.textContent===msg) t.textContent=''; }, 3000);
+}
+
+// add custom book — with its own category picker
+function renderNewBookCategorySelect(){
+  const sel = document.getElementById('newBookCategory');
+  const current = sel.value;
+  sel.innerHTML = state.bookCategories.map(c=>`<option>${c}</option>`).join('');
+  if(state.bookCategories.includes(current)) sel.value = current;
+}
+document.getElementById('addBookCategoryBtn').addEventListener('click', ()=>{
+  const row = document.getElementById('newBookCategoryRow');
+  row.style.display = 'flex';
+  document.getElementById('newBookCategoryInput').value = '';
+  document.getElementById('newBookCategoryInput').focus();
+});
+document.getElementById('cancelBookCategoryBtn').addEventListener('click', ()=>{
+  document.getElementById('newBookCategoryRow').style.display = 'none';
+});
+document.getElementById('confirmBookCategoryBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('newBookCategoryInput');
+  const trimmed = input.value.trim();
+  if(!trimmed) return;
+  if(!state.bookCategories.includes(trimmed)) state.bookCategories.push(trimmed);
+  save();
+  renderNewBookCategorySelect();
+  document.getElementById('newBookCategory').value = trimmed;
+  document.getElementById('newBookCategoryRow').style.display = 'none';
+});
+document.getElementById('confirmBookBtn').addEventListener('click', ()=>{
+  const titleInput = document.getElementById('newBookInput');
+  const title = titleInput.value.trim();
+  const category = document.getElementById('newBookCategory').value;
+  if(!title){ bookToast('Add a title, first.'); return; }
+  if(!state.books.some(b=>b.title===title)) state.books.push({title, category, pages:0, reads:[false,false,false]});
+  save();
+  titleInput.value = '';
+  renderBookSelect(); renderBooks();
+  bookToast('Added to your reading list.');
+});
+
+// books grouped by category, collapsible
+let collapsedBookCategories = null;
+function renderBooks(){
+  const el = document.getElementById('bookGroups');
+  if(!state.books.length){ el.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">No books yet.</p>'; return; }
+  const readLabels = ['1st Read','2nd Read','3rd Read'];
+  const groups = {};
+  state.books.forEach((b,i)=>{
+    if(!b.reads) b.reads = [false,false,false];
+    const cat = b.category || 'Custom';
+    if(!groups[cat]) groups[cat] = [];
+    groups[cat].push({...b, i});
+  });
+  const orderedCats = state.bookCategories.filter(c=>groups[c]).concat(Object.keys(groups).filter(c=>!state.bookCategories.includes(c)));
+  if(collapsedBookCategories === null){
+    collapsedBookCategories = new Set(orderedCats);
+  }
+
+  el.innerHTML = orderedCats.map(cat=>{
+    const items = groups[cat];
+    const isCollapsed = collapsedBookCategories.has(cat);
+    const rows = items.map(b=>{
+      const checks = readLabels.map((label,r)=>
+        `<label style="display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--ink-soft); cursor:pointer;">
+          <input type="checkbox" data-bookidx="${b.i}" data-readnum="${r}" ${b.reads[r]?'checked':''}> ${label}
+        </label>`
+      ).join('');
+      return `<li style="flex-direction:column; align-items:stretch; gap:8px;">
+        <div style="display:flex; justify-content:space-between;">
+          <span>${b.title}</span><span>${b.pages}p</span>
+        </div>
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">${checks}</div>
+      </li>`;
+    }).join('');
+    return `<div class="sched-group">
+      <button type="button" class="sched-group-header" data-cattoggle="${cat}">
+        <span>${cat}</span>
+        <span class="sched-group-meta"><span>${items.length}</span><span class="chev${isCollapsed?'':' open'}">›</span></span>
+      </button>
+      <ul class="plain sched-group-body" style="display:${isCollapsed?'none':'block'};">${rows}</ul>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('[data-cattoggle]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.cattoggle;
+      if(collapsedBookCategories.has(key)) collapsedBookCategories.delete(key); else collapsedBookCategories.add(key);
+      renderBooks();
+    });
+  });
+  el.querySelectorAll('[data-bookidx]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const idx = Number(cb.dataset.bookidx);
+      const r = Number(cb.dataset.readnum);
+      state.books[idx].reads[r] = cb.checked;
+      save();
+    });
+  });
+}
+
+// letter
+const letterEl = document.getElementById('letterText');
+function renderLetter(){
+  if(document.activeElement !== letterEl) letterEl.value = state.letter; // keep in sync with merged/remote state
+}
+renderLetter();
+letterEl.addEventListener('input', ()=>{ state.letter = letterEl.value; save(); });
+
+// segmented tabs
+document.querySelectorAll('.segbtn').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.segbtn').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+  });
+});
+
+function renderAll(){
+  renderHero(); renderCountdown(); renderDayPills(); renderStreakStats(); renderHeatmap(); renderMocks(); renderBooks();
+  renderDailyQuote(); renderLetter();
+  renderBookSelect(); renderNewBookCategorySelect(); renderCenterNames(); renderScheduleSelect(); renderSchedule(); renderBadges();
+  renderMockCategorySelect(); renderMockStats();
+}
+renderAll();
+setInterval(()=>{ renderHero(); renderCountdown(); }, 60000);
+initFirebaseSync();
+</script>
+</body>
+</html>
