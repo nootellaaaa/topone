@@ -70,9 +70,13 @@
   .badgerow{
     display:flex; gap:12px; flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px;
     scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    cursor:grab;
   }
   .badgerow::-webkit-scrollbar{ display:none; }
-  .badge{ flex:0 0 104px; scroll-snap-align:start; text-align:center; padding:10px 6px; border-radius:16px; background:rgba(29,29,31,0.03); }
+  .badgerow.dragging{ cursor:grabbing; scroll-snap-type:none; }
+  .badge{ flex:0 0 104px; scroll-snap-align:start; text-align:center; padding:10px 6px; border-radius:16px; background:rgba(29,29,31,0.03); cursor:pointer; transition:transform .1s ease; }
+  .badge:active{ transform:scale(0.96); }
+  .badge:focus-visible{ outline:2px solid var(--violet); outline-offset:2px; }
   .badge.unlocked{ background:linear-gradient(160deg, rgba(110,99,224,0.10), rgba(255,138,101,0.14)); }
   .badge-icon{
     width:44px; height:44px; margin:0 auto 6px; border-radius:50%; display:flex; align-items:center; justify-content:center;
@@ -210,11 +214,15 @@
   </div>
 
   <div class="card badgecard">
-    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <div class="mono">Milestones</div>
-      <div class="mono" style="text-transform:none; letter-spacing:0; font-weight:500; color:var(--ink-faint);">swipe →</div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button class="month-nav-btn" id="badgePrev" type="button" aria-label="Scroll milestones left">‹</button>
+        <button class="month-nav-btn" id="badgeNext" type="button" aria-label="Scroll milestones right">›</button>
+      </div>
     </div>
     <div class="badgerow" id="badgeRow"></div>
+    <div class="toast" id="badgeToastText" style="margin-top:8px;"></div>
   </div>
 
   <div class="daypills" id="dayPills"></div>
@@ -1018,54 +1026,167 @@ function renderBadges(){
   const bestMock = state.mocks.reduce((max,m)=>Math.max(max, Number(m.pct)||0), 0);
   const centersWithAttendance = new Set(state.schedule.filter(s=>s.attended).map(s=>s.center));
   const allCentersAttended = state.centers.length>0 && state.centers.every(c=>centersWithAttendance.has(c));
-  const booksWithFirstRead = state.books.filter(b=>b.reads && b.reads[0]).length;
-  const firstReadComplete = state.books.length>0 && booksWithFirstRead === state.books.length;
+  const booksWithRead = n => state.books.filter(b=>b.reads && b.reads[n]).length;
+  const readComplete = n => state.books.length>0 && booksWithRead(n) === state.books.length;
+
+  function centerFinisher(center){
+    const items = state.schedule.filter(s=>s.center===center);
+    const done = items.filter(s=>s.attended).length;
+    return { total: items.length, done, complete: items.length>0 && done===items.length };
+  }
+  const centerProgress = {};
+  state.centers.forEach(c=>{ centerProgress[c] = centerFinisher(c); });
 
   const badges = [
     {
       icon:'⏱️', name:'50 Hours', unlocked: totalHours>=50,
-      sub: totalHours>=50 ? 'Unlocked' : Math.floor(totalHours)+'/50 hrs'
+      sub: totalHours>=50 ? 'Unlocked' : Math.floor(totalHours)+'/50 hrs',
+      desc:'Log 50 total hours of study across any session type.'
     },
     {
       icon:'📚', name:'150 Hours', unlocked: totalHours>=150,
-      sub: totalHours>=150 ? 'Unlocked' : Math.floor(totalHours)+'/150 hrs'
+      sub: totalHours>=150 ? 'Unlocked' : Math.floor(totalHours)+'/150 hrs',
+      desc:'Log 150 total hours of study.'
     },
     {
       icon:'🏛️', name:'300 Hours', unlocked: totalHours>=300,
-      sub: totalHours>=300 ? 'Unlocked' : Math.floor(totalHours)+'/300 hrs'
+      sub: totalHours>=300 ? 'Unlocked' : Math.floor(totalHours)+'/300 hrs',
+      desc:'Log 300 total hours — closing in on TopLab\'s full 375-hour syllabus.'
     },
     {
       icon:'🎯', name:'70%+ Mock', unlocked: bestMock>=70,
-      sub: bestMock>=70 ? 'Unlocked' : (bestMock>0 ? 'Best: '+Math.round(bestMock)+'%' : 'No mocks yet')
+      sub: bestMock>=70 ? 'Unlocked' : (bestMock>0 ? 'Best: '+Math.round(bestMock)+'%' : 'No mocks yet'),
+      desc:'Score 70% or higher on any recorded mock exam.'
     },
     {
       icon:'🏆', name:'90%+ Mock', unlocked: bestMock>=90,
-      sub: bestMock>=90 ? 'Unlocked' : (bestMock>0 ? 'Best: '+Math.round(bestMock)+'%' : 'No mocks yet')
+      sub: bestMock>=90 ? 'Unlocked' : (bestMock>0 ? 'Best: '+Math.round(bestMock)+'%' : 'No mocks yet'),
+      desc:'Score 90% or higher on any recorded mock — Top 1 territory.'
+    },
+    {
+      icon:'📝', name:'10 Mocks Logged', unlocked: state.mocks.length>=10,
+      sub: state.mocks.length>=10 ? 'Unlocked' : state.mocks.length+'/10 mocks',
+      desc:'Record 10 mock exams — consistency in testing yourself matters as much as reviewing.'
     },
     {
       icon:'🔥', name:'30-Day Streak', unlocked: state.bestStreak>=30,
-      sub: state.bestStreak>=30 ? 'Unlocked' : state.bestStreak+'/30 days'
+      sub: state.bestStreak>=30 ? 'Unlocked' : state.bestStreak+'/30 days',
+      desc:'Reach a 30-day study streak.'
     },
     {
       icon:'💪', name:'60-Day Streak', unlocked: state.bestStreak>=60,
-      sub: state.bestStreak>=60 ? 'Unlocked' : state.bestStreak+'/60 days'
+      sub: state.bestStreak>=60 ? 'Unlocked' : state.bestStreak+'/60 days',
+      desc:'Reach a 60-day study streak.'
+    },
+    {
+      icon:'🚀', name:'100-Day Streak', unlocked: state.bestStreak>=100,
+      sub: state.bestStreak>=100 ? 'Unlocked' : state.bestStreak+'/100 days',
+      desc:'Reach a 100-day study streak — this is what Top 1 discipline looks like.'
     },
     {
       icon:'🗂️', name:'All 3 Centers', unlocked: allCentersAttended,
-      sub: allCentersAttended ? 'Unlocked' : centersWithAttendance.size+'/'+state.centers.length+' started'
+      sub: allCentersAttended ? 'Unlocked' : centersWithAttendance.size+'/'+state.centers.length+' started',
+      desc:'Attend at least one session at every review center you\'re enrolled in.'
     },
     {
-      icon:'📖', name:'First Read Complete', unlocked: firstReadComplete,
-      sub: firstReadComplete ? 'Unlocked' : booksWithFirstRead+'/'+state.books.length+' books'
+      icon:'🔵', name:'TopLab Finisher', unlocked: centerProgress['TopLab']?.complete || false,
+      sub: centerProgress['TopLab'] ? (centerProgress['TopLab'].complete ? 'Unlocked' : centerProgress['TopLab'].done+'/'+centerProgress['TopLab'].total+' sessions') : 'No schedule yet',
+      desc:'Mark every scheduled TopLab session as attended.'
+    },
+    {
+      icon:'🟡', name:'MST Finisher', unlocked: centerProgress['MST']?.complete || false,
+      sub: centerProgress['MST'] ? (centerProgress['MST'].complete ? 'Unlocked' : centerProgress['MST'].done+'/'+centerProgress['MST'].total+' sessions') : 'No schedule yet',
+      desc:'Mark every scheduled MST session as attended.'
+    },
+    {
+      icon:'🟣', name:'Padilla Finisher', unlocked: centerProgress['Padilla']?.complete || false,
+      sub: centerProgress['Padilla'] ? (centerProgress['Padilla'].complete ? 'Unlocked' : centerProgress['Padilla'].done+'/'+centerProgress['Padilla'].total+' sessions') : 'No schedule yet',
+      desc:'Mark every scheduled Padilla session as attended.'
+    },
+    {
+      icon:'📖', name:'First Read Complete', unlocked: readComplete(0),
+      sub: readComplete(0) ? 'Unlocked' : booksWithRead(0)+'/'+state.books.length+' books',
+      desc:'Check off "1st Read" on every book in your reading list.'
+    },
+    {
+      icon:'📗', name:'Second Read Complete', unlocked: readComplete(1),
+      sub: readComplete(1) ? 'Unlocked' : booksWithRead(1)+'/'+state.books.length+' books',
+      desc:'Check off "2nd Read" on every book in your reading list.'
+    },
+    {
+      icon:'📘', name:'Mastery — 3rd Read', unlocked: readComplete(2),
+      sub: readComplete(2) ? 'Unlocked' : booksWithRead(2)+'/'+state.books.length+' books',
+      desc:'Check off "3rd Read" on every book — full mastery pass through the reading list.'
     }
   ];
-  document.getElementById('badgeRow').innerHTML = badges.map(b=>`
-    <div class="badge${b.unlocked?' unlocked':''}">
+
+  const otherUnlocked = badges.every(b=>b.unlocked);
+  badges.push({
+    icon:'👑', name:'Full Circle', unlocked: otherUnlocked,
+    sub: otherUnlocked ? 'Unlocked' : badges.filter(b=>b.unlocked).length+'/'+badges.length+' milestones',
+    desc:'Unlock every other milestone. This is the whole board, cleared.'
+  });
+
+  document.getElementById('badgeRow').innerHTML = badges.map((b,i)=>`
+    <div class="badge${b.unlocked?' unlocked':''}" data-badgeidx="${i}" role="button" tabindex="0">
       <div class="badge-icon">${b.icon}</div>
       <div class="badge-name">${b.name}</div>
       <div class="badge-sub">${b.sub}</div>
     </div>`).join('');
+
+  const showBadgeInfo = (b)=>{
+    badgeToast((b.unlocked ? '✓ ' : '') + b.name + ' — ' + b.desc);
+  };
+  document.querySelectorAll('#badgeRow [data-badgeidx]').forEach(el=>{
+    el.addEventListener('click', ()=> showBadgeInfo(badges[Number(el.dataset.badgeidx)]));
+    el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); showBadgeInfo(badges[Number(el.dataset.badgeidx)]); } });
+  });
 }
+function badgeToast(msg){
+  const t = document.getElementById('badgeToastText');
+  t.textContent = msg;
+  clearTimeout(window.__badgeToastTimer);
+  window.__badgeToastTimer = setTimeout(()=>{ if(t.textContent===msg) t.textContent=''; }, 4500);
+}
+
+// desktop support for the milestones slider — arrow buttons, wheel scroll, click-drag
+(function setupBadgeRowDesktopScroll(){
+  const el = document.getElementById('badgeRow');
+  const SCROLL_STEP = 232; // roughly two badges
+
+  document.getElementById('badgePrev').addEventListener('click', ()=>{
+    el.scrollBy({left: -SCROLL_STEP, behavior:'smooth'});
+  });
+  document.getElementById('badgeNext').addEventListener('click', ()=>{
+    el.scrollBy({left: SCROLL_STEP, behavior:'smooth'});
+  });
+
+  // vertical mouse wheel → horizontal scroll
+  el.addEventListener('wheel', (e)=>{
+    if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    }
+  }, {passive:false});
+
+  // click-and-drag scrolling
+  let isDown = false, startX = 0, scrollStart = 0, moved = false;
+  el.addEventListener('mousedown', (e)=>{
+    isDown = true; moved = false; el.classList.add('dragging');
+    startX = e.clientX; scrollStart = el.scrollLeft;
+  });
+  window.addEventListener('mouseup', ()=>{ isDown = false; el.classList.remove('dragging'); });
+  el.addEventListener('mousemove', (e)=>{
+    if(!isDown) return;
+    const dx = e.clientX - startX;
+    if(Math.abs(dx) > 4) moved = true;
+    el.scrollLeft = scrollStart - dx;
+  });
+  // swallow the click that follows a drag so it doesn't also open a badge's info toast
+  el.addEventListener('click', (e)=>{
+    if(moved){ e.stopPropagation(); e.preventDefault(); moved = false; }
+  }, true);
+})();
 
 // mocks — category dropdown, score/total → live percentage, per-category stats
 function renderMockCategorySelect(){
