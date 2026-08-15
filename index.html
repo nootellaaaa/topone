@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LEA 2027</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23B9C6F2%22/%3E%3Cstop%20offset%3D%2255%25%22%20stop-color%3D%22%23E7C7DE%22/%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23FBE2C4%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2224%22%20fill%3D%22url%28%23g%29%22/%3E%3Cpath%20d%3D%22M27%2060%20L50%2033%20L73%2060%22%20stroke%3D%22%231D1D1F%22%20stroke-width%3D%228%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3Cline%20x1%3D%2227%22%20y1%3D%2260%22%20x2%3D%2273%22%20y2%3D%2260%22%20stroke%3D%22%231D1D1F%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23B9C6F2%22/%3E%3Cstop%20offset%3D%2255%25%22%20stop-color%3D%22%23E7C7DE%22/%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23FBE2C4%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2224%22%20fill%3D%22url%28%23g%29%22/%3E%3Cpath%20d%3D%22M27%2060%20L50%2033%20L73%2060%22%20stroke%3D%22%231D1D1F%22%20stroke-width%3D%228%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3Cline%20x1%3D%2227%22%20y1%3D%2260%22%20x2%3D%2273%22%20y2%3D%2260%22%20stroke%3D%22%231D1D1F%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -86,15 +88,26 @@
   .badge-name{ font-size:11px; font-weight:700; color:var(--ink); }
   .badge-sub{ font-size:9.5px; color:var(--ink-faint); margin-top:2px; }
   .badge.unlocked .badge-sub{ color:var(--coral); font-weight:600; }
-  .daypills{ display:flex; gap:6px; margin:16px auto 0; max-width:900px; }
-  .daypill{
-    flex:1; text-align:center; background:var(--glass-strong); border-radius:14px; padding:8px 0;
-    box-shadow:var(--shadow); font-size:11px; color:var(--ink-soft); font-weight:600;
+  .weekcard{ margin-top:16px; }
+  .weekgrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .weekday-card{
+    background:var(--glass-strong); border-radius:14px; padding:8px 3px 9px; box-shadow:var(--shadow);
+    text-align:center; cursor:pointer; transition:transform .1s ease;
   }
-  .daypill .d{ font-size:13.5px; font-weight:700; color:var(--ink); margin-top:2px; }
-  .daypill.logged{ background:var(--ink); color:#fff; }
-  .daypill.logged .d{ color:#fff; }
-  .daypill.today{ outline:2px solid var(--coral); outline-offset:-2px; }
+  .weekday-card:active{ transform:scale(0.96); }
+  .weekday-card:focus-visible{ outline:2px solid var(--violet); outline-offset:2px; }
+  .weekday-card.today{ outline:2px solid var(--coral); outline-offset:-2px; }
+  .weekday-name{ font-size:10px; font-weight:700; color:var(--ink-soft); }
+  .weekday-num{ font-size:13.5px; font-weight:700; color:var(--ink); margin:2px 0 7px; }
+  .weekday-dots{ display:flex; justify-content:center; gap:3px; flex-wrap:wrap; min-height:7px; }
+  .weekday-dots span{ width:6px; height:6px; border-radius:50%; display:inline-block; }
+  .weekday-empty{ width:6px; height:2px; border-radius:2px; background:rgba(29,29,31,0.12); display:inline-block; }
+  .weekday-card.selected{ background:rgba(110,99,224,0.10); }
+  .week-detail-date{ font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:12px 0 6px; }
+  .week-detail-row{
+    display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px; font-weight:500;
+  }
+  .week-detail-row:last-child{ border-bottom:none; }
 
   /* Glass cards */
   .card{
@@ -225,7 +238,11 @@
     <div class="toast" id="badgeToastText" style="margin-top:8px;"></div>
   </div>
 
-  <div class="daypills" id="dayPills"></div>
+  <div class="card weekcard">
+    <div class="mono" style="margin-bottom:10px;">This week</div>
+    <div class="weekgrid" id="weekGrid"></div>
+    <div id="weekDayDetail"></div>
+  </div>
 
   <div class="row2">
     <div class="card">
@@ -737,21 +754,69 @@ function renderCountdown(){
 examInput.addEventListener('change', ()=>{ state.examDate = examInput.value; save(); renderCountdown(); });
 
 // day pills — this week, Sun to Sat
+function shortScheduleLabel(label){
+  // strip trailing parenthetical sub-topic detail for a cleaner one-line read
+  return label.replace(/\s*\([^)]*\)\s*$/, '');
+}
+let selectedWeekDayISO = null;
 function renderDayPills(){
-  const wrap = document.getElementById('dayPills');
+  const wrap = document.getElementById('weekGrid');
   wrap.innerHTML = '';
   const today = new Date(new Date().toDateString());
   const sunday = new Date(today); sunday.setDate(today.getDate() - today.getDay());
-  const loggedDates = new Set(state.sessions.map(s=>s.date));
+
+  const scheduleByDate = {};
+  state.schedule.forEach(s=>{
+    if(!scheduleByDate[s.date]) scheduleByDate[s.date] = [];
+    scheduleByDate[s.date].push(s);
+  });
+
+  const weekDates = [];
   for(let i=0;i<7;i++){
     const d = new Date(sunday); d.setDate(sunday.getDate()+i);
-    const isToday = d.getTime()===today.getTime();
-    const isLogged = loggedDates.has(d.toDateString());
-    const el = document.createElement('div');
-    el.className = 'daypill' + (isLogged?' logged':'') + (isToday?' today':'');
-    el.innerHTML = `<div>${d.toLocaleDateString('en-US',{weekday:'short'})}</div><div class="d">${d.getDate()}</div>`;
-    wrap.appendChild(el);
+    weekDates.push(d);
   }
+
+  if(selectedWeekDayISO === null){
+    selectedWeekDayISO = today.toISOString().slice(0,10);
+  }
+
+  weekDates.forEach(d=>{
+    const iso = d.toISOString().slice(0,10);
+    const isToday = d.getTime()===today.getTime();
+    const isSelected = iso === selectedWeekDayISO;
+    const items = scheduleByDate[iso] || [];
+    const dots = items.length
+      ? items.slice(0,6).map(it=>`<span style="background:${centerColor(it.center)}"></span>`).join('')
+      : '<span class="weekday-empty"></span>';
+
+    const el = document.createElement('div');
+    el.className = 'weekday-card' + (isToday?' today':'') + (isSelected?' selected':'');
+    el.setAttribute('role','button');
+    el.setAttribute('tabindex','0');
+    el.innerHTML = `<div class="weekday-name">${d.toLocaleDateString('en-US',{weekday:'short'})}</div>
+      <div class="weekday-num">${d.getDate()}</div>
+      <div class="weekday-dots">${dots}</div>`;
+
+    const selectDay = ()=>{ selectedWeekDayISO = iso; renderDayPills(); };
+    el.addEventListener('click', selectDay);
+    el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectDay(); } });
+
+    wrap.appendChild(el);
+  });
+
+  renderWeekDayDetail(weekDates.find(d=>d.toISOString().slice(0,10)===selectedWeekDayISO), scheduleByDate[selectedWeekDayISO] || []);
+}
+function renderWeekDayDetail(dateObj, items){
+  const el = document.getElementById('weekDayDetail');
+  if(!dateObj){ el.innerHTML = ''; return; }
+  const dayLabel = dateObj.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
+  if(!items.length){
+    el.innerHTML = `<div class="week-detail-date">${dayLabel}</div><div style="font-size:12.5px; color:var(--ink-soft);">Nothing scheduled.</div>`;
+    return;
+  }
+  const rows = items.map(it => `<div class="week-detail-row">${centerBadge(it.center)}<span>${shortScheduleLabel(it.label)}</span></div>`).join('');
+  el.innerHTML = `<div class="week-detail-date">${dayLabel}</div>${rows}`;
 }
 
 // streak stat bars
