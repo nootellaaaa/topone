@@ -207,6 +207,7 @@
       <div class="hi" id="heroHi">Hello, Architect Ella</div>
       <div class="manifest mono">Top 1 · LEA 2027</div>
       <div class="date" id="heroDate">—</div>
+      <div class="mono" id="syncStatus" style="margin-top:6px; display:inline-flex; align-items:center; gap:5px; text-transform:none; letter-spacing:0; font-weight:600; color:rgba(29,29,31,0.55);"></div>
     </div>
     <svg class="flower" id="flowerSvg" viewBox="0 0 100 100"></svg>
   </div>
@@ -413,8 +414,105 @@ const STORE_KEY = 'lea2027_apple_v1';
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || def(); } catch(e){ return def(); } }
 function def(){ return { examDate:'', sessions:[], mocks:[], books:[], letter:'', lastLogDate:'', streak:0, bestStreak:0, centers:['Review Center 1','Review Center 2','Review Center 3'], schedule:[], mockCategories:['Theory','History','Design'] }; }
 let state = load();
-function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+let saveDebounceTimer = null;
+function save(){
+  state._updatedAt = Date.now();
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  setSyncStatus('syncing');
+  clearTimeout(saveDebounceTimer);
+  saveDebounceTimer = setTimeout(()=>{ fbSave(state); }, 900);
+}
 function todayStr(){ return new Date().toDateString(); }
+
+// --- Firebase sync (cross-device) — lightweight REST calls, no SDK download ---
+const FIREBASE_API_KEY = 'AIzaSyD9w_q-NwTAkMPb2oZiO4_mz2b6-Wkc7Kg';
+const FIREBASE_DB_URL = 'https://toponelea2027-default-rtdb.asia-southeast1.firebasedatabase.app';
+const FIREBASE_DATA_PATH = '/ella/leaTracker';
+const FB_AUTH_CACHE_KEY = 'lea2027_fbauth_v1';
+
+function setSyncStatus(status){
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  const map = {
+    synced: {text:'Synced', color:'#5FB89C'},
+    syncing: {text:'Syncing…', color:'#F2A65A'},
+    offline: {text:'Offline — saved locally', color:'#9AA0A6'}
+  };
+  const s = map[status] || map.offline;
+  el.innerHTML = `<span style="width:6px; height:6px; border-radius:50%; background:${s.color}; display:inline-block;"></span> ${s.text}`;
+}
+
+async function fbEnsureAuth(){
+  let cached = null;
+  try{ cached = JSON.parse(localStorage.getItem(FB_AUTH_CACHE_KEY) || 'null'); }catch(e){}
+  if(cached && cached.expiresAt > Date.now() + 60000){
+    return cached.idToken;
+  }
+  if(cached && cached.refreshToken){
+    try{
+      const res = await fetch(`https://securetoken.googleapis.com/v1/token?key=${FIREBASE_API_KEY}`, {
+        method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:`grant_type=refresh_token&refresh_token=${cached.refreshToken}`
+      });
+      const data = await res.json();
+      if(data.id_token){
+        const record = {idToken:data.id_token, refreshToken:data.refresh_token, expiresAt:Date.now()+Number(data.expires_in)*1000};
+        localStorage.setItem(FB_AUTH_CACHE_KEY, JSON.stringify(record));
+        return record.idToken;
+      }
+    }catch(e){ /* fall through to fresh sign-in */ }
+  }
+  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({returnSecureToken:true})
+  });
+  const data = await res.json();
+  if(!data.idToken) throw new Error('Firebase anonymous sign-in failed');
+  const record = {idToken:data.idToken, refreshToken:data.refreshToken, expiresAt:Date.now()+Number(data.expiresIn)*1000};
+  localStorage.setItem(FB_AUTH_CACHE_KEY, JSON.stringify(record));
+  return record.idToken;
+}
+async function fbLoad(){
+  try{
+    const token = await fbEnsureAuth();
+    const res = await fetch(`${FIREBASE_DB_URL}${FIREBASE_DATA_PATH}.json?auth=${token}`);
+    if(!res.ok) throw new Error('Firebase read failed: ' + res.status);
+    return await res.json();
+  }catch(e){
+    console.warn('Firebase load failed, using local data.', e);
+    setSyncStatus('offline');
+    return null;
+  }
+}
+async function fbSave(stateToSave){
+  try{
+    const token = await fbEnsureAuth();
+    const res = await fetch(`${FIREBASE_DB_URL}${FIREBASE_DATA_PATH}.json?auth=${token}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(stateToSave)
+    });
+    if(!res.ok) throw new Error('Firebase write failed: ' + res.status);
+    setSyncStatus('synced');
+  }catch(e){
+    console.warn('Firebase save failed — will retry on next change.', e);
+    setSyncStatus('offline');
+  }
+}
+async function initFirebaseSync(){
+  setSyncStatus('syncing');
+  const remote = await fbLoad();
+  if(remote && (!state._updatedAt || (remote._updatedAt||0) > state._updatedAt)){
+    state = remote;
+    // re-run seeders in case the remote copy predates a feature — all are idempotent/flagged
+    ensureDefaultBooks(); ensureBookCategoryMigration(); ensureScheduleIds();
+    ensureToplabSchedule(); ensureMstSchedule(); ensurePadillaSchedule();
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    renderAll();
+    setSyncStatus('synced');
+  } else {
+    fbSave(state); // local is current — push it up (covers first-run / stale-remote cases)
+  }
+}
 
 // gradual readings list — from Ella's review center reading plan
 const DEFAULT_BOOKS = [
@@ -752,6 +850,7 @@ function renderHero(){
 const examInput = document.getElementById('examDate');
 examInput.value = state.examDate;
 function renderCountdown(){
+  if(document.activeElement !== examInput) examInput.value = state.examDate; // keep in sync with merged/remote state, but don't fight the user mid-edit
   const daysEl = document.getElementById('daysLeft');
   const labelEl = document.getElementById('examDateLabel');
   if(!state.examDate){ daysEl.textContent='—'; labelEl.textContent='set your exam date below'; return; }
@@ -1667,7 +1766,10 @@ function renderBooks(){
 
 // letter
 const letterEl = document.getElementById('letterText');
-letterEl.value = state.letter;
+function renderLetter(){
+  if(document.activeElement !== letterEl) letterEl.value = state.letter; // keep in sync with merged/remote state
+}
+renderLetter();
 letterEl.addEventListener('input', ()=>{ state.letter = letterEl.value; save(); });
 
 // segmented tabs
@@ -1682,12 +1784,13 @@ document.querySelectorAll('.segbtn').forEach(tab=>{
 
 function renderAll(){
   renderHero(); renderCountdown(); renderDayPills(); renderStreakStats(); renderHeatmap(); renderMocks(); renderBooks();
-  renderDailyQuote();
+  renderDailyQuote(); renderLetter();
   renderBookSelect(); renderNewBookCategorySelect(); renderCenterNames(); renderScheduleSelect(); renderSchedule(); renderBadges();
   renderMockCategorySelect(); renderMockStats();
 }
 renderAll();
 setInterval(()=>{ renderHero(); renderCountdown(); }, 60000);
+initFirebaseSync();
 </script>
 </body>
 </html>
