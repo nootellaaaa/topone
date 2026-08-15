@@ -166,6 +166,9 @@
   .month-daylabels span{ text-align:center; font-size:9px; font-weight:700; color:var(--ink-faint); }
   .month-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin:0 auto; max-width:320px; }
   .month-grid .cell{ aspect-ratio:1; border-radius:6px; background:rgba(29,29,31,0.06); }
+  .month-grid .cell.clickable{ cursor:pointer; transition:transform .1s ease; }
+  .month-grid .cell.clickable:active{ transform:scale(0.85); }
+  .month-grid .cell.selected-day{ outline:2px solid var(--violet); outline-offset:1px; }
 
   /* Segmented tabs */
   .segwrap{ margin-top:18px; display:flex; background:rgba(29,29,31,0.06); border-radius:999px; padding:4px; max-width:520px; }
@@ -302,6 +305,7 @@
       <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
     </div>
     <div class="month-grid" id="heatmapGrid"></div>
+    <div id="heatmapDayDetail" style="margin-top:10px;"></div>
   </div>
 
   <div class="segwrap" role="tablist">
@@ -441,6 +445,14 @@ function save(){
   saveDebounceTimer = setTimeout(()=>{ fbSave(state); }, 900);
 }
 function todayStr(){ return new Date().toDateString(); }
+function toLocalISO(dateObj){
+  // Timezone-safe local YYYY-MM-DD — never use .toISOString() for this, it converts to UTC
+  // and silently shifts the date by a day in any timezone ahead of UTC (e.g. UTC+8).
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth()+1).padStart(2,'0');
+  const d = String(dateObj.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
 
 // --- Firebase sync (cross-device) — lightweight REST calls, no SDK download ---
 const FIREBASE_API_KEY = 'AIzaSyD9w_q-NwTAkMPb2oZiO4_mz2b6-Wkc7Kg';
@@ -525,6 +537,7 @@ async function initFirebaseSync(){
     // re-run seeders in case the remote copy predates a feature — all are idempotent/flagged
     ensureDefaultBooks(); ensureBookCategoryMigration(); ensureScheduleIds();
     ensureToplabSchedule(); ensureMstSchedule(); ensurePadillaSchedule();
+    ensureCorrectedCenterDates();
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
     renderAll();
     setSyncStatus('synced');
@@ -717,7 +730,7 @@ function weekdayDates(startISO){
   for(let i=0;i<5;i++){
     const nd = new Date(d);
     nd.setDate(d.getDate()+i);
-    dates.push(nd.toISOString().slice(0,10));
+    dates.push(toLocalISO(nd));
   }
   return dates;
 }
@@ -763,7 +776,7 @@ function ensurePadillaSchedule(){
   let n = 0;
   while(d <= end){
     const day = d.getDay(); // 0 Sun ... 6 Sat
-    const iso = d.toISOString().slice(0,10);
+    const iso = toLocalISO(d);
     if(day === 2 || day === 4){
       state.schedule.push({id:'padilla-'+n, center:'Padilla', date:iso, label:'Refresher Class (tentative — modules TBA) — 7:00–10:30 PM · 3.5h', attended:false});
       n++;
@@ -778,6 +791,24 @@ function ensurePadillaSchedule(){
   save();
 }
 ensurePadillaSchedule();
+
+// One-time correction: MST/Padilla dates were previously generated with a UTC-shifting bug
+// (toISOString() shifts the date back a day in timezones ahead of UTC, like UTC+8). This
+// re-seeds those two centers with corrected dates and clears any attendance sessions tied
+// to the old (possibly wrong) schedule items, so nothing stays silently off by a day.
+function ensureCorrectedCenterDates(){
+  if(state.centerDatesFixedV2) return;
+  const idsToRemove = new Set(state.schedule.filter(s=>s.center==='MST' || s.center==='Padilla').map(s=>s.id));
+  state.schedule = state.schedule.filter(s=>s.center!=='MST' && s.center!=='Padilla');
+  state.sessions = state.sessions.filter(se => !(se.id && idsToRemove.has(se.id.replace(/^sess-/,''))));
+  state.mstSeeded = false;
+  state.padillaSeeded = false;
+  ensureMstSchedule();
+  ensurePadillaSchedule();
+  state.centerDatesFixedV2 = true;
+  save();
+}
+ensureCorrectedCenterDates();
 
 function parseHoursFromLabel(label){
   const m = label.match(/([\d.]+)\s*h\b/i);
@@ -934,10 +965,10 @@ function renderDayPills(){
     const d = new Date(sunday); d.setDate(sunday.getDate()+i);
     weekDates.push(d);
   }
-  const weekISOs = weekDates.map(d=>d.toISOString().slice(0,10));
+  const weekISOs = weekDates.map(d=>toLocalISO(d));
 
   if(selectedWeekDayISO === null || !weekISOs.includes(selectedWeekDayISO)){
-    const todayISO = today.toISOString().slice(0,10);
+    const todayISO = toLocalISO(today);
     selectedWeekDayISO = weekISOs.includes(todayISO) ? todayISO : weekISOs[0];
   }
 
@@ -945,7 +976,7 @@ function renderDayPills(){
   document.getElementById('weekRangeLabel').textContent = weekOffset===0 ? 'This week' : rangeLabel;
 
   weekDates.forEach(d=>{
-    const iso = d.toISOString().slice(0,10);
+    const iso = toLocalISO(d);
     const isToday = d.getTime()===today.getTime();
     const isSelected = iso === selectedWeekDayISO;
     const items = scheduleByDate[iso] || [];
@@ -968,7 +999,7 @@ function renderDayPills(){
     wrap.appendChild(el);
   });
 
-  renderWeekDayDetail(weekDates.find(d=>d.toISOString().slice(0,10)===selectedWeekDayISO), scheduleByDate[selectedWeekDayISO] || []);
+  renderWeekDayDetail(weekDates.find(d=>toLocalISO(d)===selectedWeekDayISO), scheduleByDate[selectedWeekDayISO] || []);
 
   const bounds = getScheduleDateBounds();
   if(bounds){
@@ -1026,6 +1057,7 @@ document.getElementById('heatmapNext').addEventListener('click', ()=>{
   clampHeatmapMonth();
   renderHeatmap();
 });
+let selectedHeatmapDateISO = null;
 function renderHeatmap(){
   if(heatmapMonth === null){
     const now = new Date();
@@ -1047,22 +1079,69 @@ function renderHeatmap(){
   let monthTotal = 0;
   for(let d=1; d<=daysInMonth; d++){
     const dateObj = new Date(y, m, d);
-    const hrs = hoursByDate[dateObj.toDateString()] || 0;
+    const dateStr = dateObj.toDateString();
+    const iso = toLocalISO(dateObj);
+    const hrs = hoursByDate[dateStr] || 0;
     monthTotal += hrs;
     let bg = 'rgba(29,29,31,0.06)';
     if(hrs >= 3) bg = '#FF8A65';
     else if(hrs >= 1.5) bg = '#F0987A';
     else if(hrs > 0) bg = '#F4C7B0';
-    cells += `<div class="cell" title="${dateObj.toDateString()}: ${hrs}h" style="background:${bg}"></div>`;
+    const isSelected = iso === selectedHeatmapDateISO;
+    cells += `<div class="cell clickable${isSelected?' selected-day':''}" data-heatdate="${iso}" title="${dateStr}: ${hrs}h" style="background:${bg}"></div>`;
   }
   document.getElementById('heatmapGrid').innerHTML = cells;
   document.getElementById('heatmapTotal').textContent = (Math.round(monthTotal*10)/10) + 'h this month';
+
+  document.querySelectorAll('#heatmapGrid [data-heatdate]').forEach(cell=>{
+    cell.addEventListener('click', ()=>{
+      selectedHeatmapDateISO = (selectedHeatmapDateISO === cell.dataset.heatdate) ? null : cell.dataset.heatdate;
+      renderHeatmap();
+    });
+  });
+
+  renderHeatmapDayDetail();
 
   const val = y*12 + m;
   const min = HEATMAP_MIN.y*12 + HEATMAP_MIN.m;
   const max = HEATMAP_MAX.y*12 + HEATMAP_MAX.m;
   document.getElementById('heatmapPrev').disabled = val <= min;
   document.getElementById('heatmapNext').disabled = val >= max;
+}
+function renderHeatmapDayDetail(){
+  const el = document.getElementById('heatmapDayDetail');
+  if(!selectedHeatmapDateISO){ el.innerHTML = ''; return; }
+  const dateObj = new Date(selectedHeatmapDateISO + 'T00:00:00');
+  const dateStr = dateObj.toDateString();
+  const dayLabel = dateObj.toLocaleDateString('en-US',{weekday:'long', month:'short', day:'numeric'});
+  const items = state.sessions.map((s,i)=>({...s, i})).filter(s=>s.date === dateStr);
+
+  if(!items.length){
+    el.innerHTML = `<div class="week-detail-date">${dayLabel}</div><div style="font-size:12.5px; color:var(--ink-soft);">Nothing logged this day.</div>`;
+    return;
+  }
+  const rows = items.map(s => `
+    <div class="week-detail-row">
+      <span style="flex:1;">${s.subject}${s.topic? ' — '+s.topic:''} <span class="mono" style="text-transform:none; letter-spacing:0; font-weight:500;">${s.hours}h</span></span>
+      <button class="btn" data-delheatsession="${s.i}" type="button" style="padding:4px 9px; font-size:10px; background:rgba(255,138,101,0.15); color:var(--coral);">Remove</button>
+    </div>`).join('');
+  el.innerHTML = `<div class="week-detail-date">${dayLabel} — didn't actually study, or logged something wrong? Remove it below.</div>${rows}`;
+
+  el.querySelectorAll('[data-delheatsession]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = Number(btn.dataset.delheatsession);
+      const removed = state.sessions[idx];
+      state.sessions.splice(idx, 1);
+      if(removed && removed.id && removed.id.startsWith('sess-')){
+        // this session came from a schedule attendance checkbox — keep the Schedule tab in sync
+        const scheduleId = removed.id.slice(5);
+        const schedItem = state.schedule.find(s=>s.id === scheduleId);
+        if(schedItem) schedItem.attended = false;
+      }
+      save();
+      renderAll();
+    });
+  });
 }
 
 // log
@@ -1150,7 +1229,7 @@ function scheduleRowHTML(s){
   const dateLabel = isNaN(d) ? s.date : d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   if(editingScheduleIndex === s.i){
     const catOptions = state.centers.map(c=>`<option ${c===s.center?'selected':''}>${c}</option>`).join('');
-    const isoDate = isNaN(d) ? '' : d.toISOString().slice(0,10);
+    const isoDate = isNaN(d) ? '' : toLocalISO(d);
     return `<li style="flex-direction:column; align-items:stretch; gap:8px;">
       <div class="logrow">
         <select data-editschedcenter="${s.i}" style="flex:1 1 110px;">${catOptions}</select>
