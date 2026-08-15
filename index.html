@@ -416,6 +416,22 @@ const STORE_KEY = 'lea2027_apple_v1';
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || def(); } catch(e){ return def(); } }
 function def(){ return { examDate:'', sessions:[], mocks:[], books:[], letter:'', lastLogDate:'', streak:0, bestStreak:0, centers:['Review Center 1','Review Center 2','Review Center 3'], schedule:[], mockCategories:['Theory','History','Design'] }; }
 let state = load();
+function normalizeState(){
+  // defensive fallbacks — keeps one malformed/older field from crashing the whole render pass
+  if(!Array.isArray(state.sessions)) state.sessions = [];
+  if(!Array.isArray(state.mocks)) state.mocks = [];
+  if(!Array.isArray(state.books)) state.books = [];
+  if(!Array.isArray(state.schedule)) state.schedule = [];
+  if(!Array.isArray(state.centers) || !state.centers.length) state.centers = ['TopLab','MST','Padilla'];
+  if(!Array.isArray(state.mockCategories) || !state.mockCategories.length) state.mockCategories = ['Theory','History','Design'];
+  if(!Array.isArray(state.bookCategories) || !state.bookCategories.length) state.bookCategories = ['D.K. Ching','Max Fajardo','George Salvan','Architecture & Practice','Codes & Laws'];
+  if(typeof state.letter !== 'string') state.letter = '';
+  if(typeof state.examDate !== 'string') state.examDate = '';
+  if(typeof state.streak !== 'number') state.streak = 0;
+  if(typeof state.bestStreak !== 'number') state.bestStreak = 0;
+  if(typeof state.lastLogDate !== 'string') state.lastLogDate = '';
+}
+normalizeState();
 let saveDebounceTimer = null;
 function save(){
   state._updatedAt = Date.now();
@@ -505,6 +521,7 @@ async function initFirebaseSync(){
   const remote = await fbLoad();
   if(remote && (!state._updatedAt || (remote._updatedAt||0) > state._updatedAt)){
     state = remote;
+    normalizeState();
     // re-run seeders in case the remote copy predates a feature — all are idempotent/flagged
     ensureDefaultBooks(); ensureBookCategoryMigration(); ensureScheduleIds();
     ensureToplabSchedule(); ensureMstSchedule(); ensurePadillaSchedule();
@@ -1784,11 +1801,17 @@ document.querySelectorAll('.segbtn').forEach(tab=>{
   });
 });
 
+function safeRender(fn){
+  try{ fn(); }
+  catch(e){ console.error('Render error in ' + (fn.name||'anonymous') + ':', e); }
+}
 function renderAll(){
-  renderHero(); renderCountdown(); renderDayPills(); renderStreakStats(); renderHeatmap(); renderMocks(); renderBooks();
-  renderDailyQuote(); renderLetter();
-  renderBookSelect(); renderNewBookCategorySelect(); renderCenterNames(); renderScheduleSelect(); renderSchedule(); renderBadges();
-  renderMockCategorySelect(); renderMockStats();
+  [
+    renderHero, renderCountdown, renderDayPills, renderStreakStats, renderHeatmap, renderMocks, renderBooks,
+    renderDailyQuote, renderLetter,
+    renderBookSelect, renderNewBookCategorySelect, renderCenterNames, renderScheduleSelect, renderSchedule, renderBadges,
+    renderMockCategorySelect, renderMockStats
+  ].forEach(safeRender);
 }
 renderAll();
 setInterval(()=>{ renderHero(); renderCountdown(); }, 60000);
